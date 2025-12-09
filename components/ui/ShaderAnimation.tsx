@@ -1,4 +1,3 @@
-
 "use client"
 
 import { useEffect, useRef } from "react"
@@ -10,13 +9,15 @@ interface ShaderAnimationProps {
 
 export function ShaderAnimation({ imageUrl }: ShaderAnimationProps) {
   const containerRef = useRef<HTMLDivElement>(null)
+  // Track visibility to pause animation loop
+  const isVisibleRef = useRef(true); 
+
   const sceneRef = useRef<{
     camera: THREE.Camera
     scene: THREE.Scene
     renderer: THREE.WebGLRenderer
     uniforms: any
     animationId: number
-    currentWaveIndex: number
   } | null>(null)
 
   useEffect(() => {
@@ -25,6 +26,16 @@ export function ShaderAnimation({ imageUrl }: ShaderAnimationProps) {
     const container = containerRef.current
     const MAX_WAVES = 4;
     const WAVE_LIFETIME = 4.0; // Seconds
+
+    // --- INTERSECTION OBSERVER SETUP ---
+    // Optimizes performance by pausing animation when not visible
+    const observer = new IntersectionObserver((entries) => {
+        entries.forEach(entry => {
+            isVisibleRef.current = entry.isIntersecting;
+        });
+    }, { threshold: 0 }); // Trigger as soon as 1px is visible vs hidden
+    
+    observer.observe(container);
 
     // Vertex shader
     const vertexShader = `
@@ -41,7 +52,7 @@ export function ShaderAnimation({ imageUrl }: ShaderAnimationProps) {
       
       varying vec2 vUv;
       uniform vec2 resolution;
-      uniform vec2 imageResolution; // New uniform for image dimensions
+      uniform vec2 imageResolution;
       uniform float time;
       uniform sampler2D uTexture;
       uniform bool uHasTexture;
@@ -50,14 +61,12 @@ export function ShaderAnimation({ imageUrl }: ShaderAnimationProps) {
       uniform vec3 uWaves[${MAX_WAVES}]; 
 
       void main(void) {
-        // Aspect corrected UVs for circle calculations (Physical screen space)
         vec2 aspectUV = (gl_FragCoord.xy * 2.0 - resolution.xy) / min(resolution.x, resolution.y);
         
         vec3 lightColor = vec3(0.0);
         vec2 displacement = vec2(0.0);
-        float lineWidth = 0.005; // Increased width for better visibility
+        float lineWidth = 0.005;
         
-        // --- WAVE CALCULATION LOOP ---
         for(int k=0; k < ${MAX_WAVES}; k++) {
             vec3 wave = uWaves[k];
             float startTime = wave.z;
@@ -67,75 +76,57 @@ export function ShaderAnimation({ imageUrl }: ShaderAnimationProps) {
             float elapsed = time - startTime;
             if (elapsed < 0.0 || elapsed > ${WAVE_LIFETIME.toFixed(1)}) continue;
 
-            // Wave center in aspect-corrected space
             vec2 waveCenter = (wave.xy * 2.0 - resolution.xy) / min(resolution.x, resolution.y);
 
-            // Distance & Direction
             float dist = distance(aspectUV, waveCenter);
             vec2 dir = normalize(aspectUV - waveCenter);
 
             float speed = 0.8;
             float waveRadius = elapsed * speed;
             
-            // Fading
             float alpha = 1.0 - smoothstep(0.0, ${WAVE_LIFETIME.toFixed(1)}, elapsed);
             
-            // --- DISTORTION LOGIC ---
             float distortionStrength = 0.05 * alpha; 
             float distortionWidth = 0.15;
             float waveImpulse = exp(-pow((dist - waveRadius) / distortionWidth, 2.0));
             
             displacement -= dir * waveImpulse * distortionStrength;
 
-            // --- LIGHTING LOGIC ---
             vec3 waveLight = vec3(0.0);
             for(int j = 0; j < 3; j++){ 
               for(int i=0; i < 3; i++){
                 float wavePos = waveRadius - 0.02*float(j) + float(i)*0.01;
                 float ripple = abs(wavePos * 5.0 - dist * 5.0 + mod(aspectUV.x+aspectUV.y, 0.2));
-                // Increased multiplier from 2.0 to 6.0 for intense white glow
                 waveLight[j] += (lineWidth * 6.0) * float(i*i) / max(0.001, ripple);
               }
             }
             lightColor += waveLight * alpha;
         }
 
-        // --- FINAL COMPOSITION ---
         vec4 finalOutput = vec4(0.0, 0.0, 0.0, 1.0);
 
         if (uHasTexture) {
-            // --- ASPECT RATIO CORRECTION (COVER MODE) ---
             float screenAspect = resolution.x / resolution.y;
             float imageAspect = imageResolution.x / imageResolution.y;
             
             vec2 newUv = vUv;
             
             if (screenAspect > imageAspect) {
-                // Screen is wider than image: Fit Width, Crop Height
-                // We map screen 0..1 to a subset of texture Y to zoom in
                 float scale = imageAspect / screenAspect;
                 newUv.y = (vUv.y - 0.5) * scale + 0.5;
             } else {
-                // Screen is taller than image: Fit Height, Crop Width
-                // We map screen 0..1 to a subset of texture X to zoom in
                 float scale = screenAspect / imageAspect;
                 newUv.x = (vUv.x - 0.5) * scale + 0.5;
             }
 
-            // Apply displacement to the corrected UVs
             vec2 distortedUv = newUv + displacement;
             
-            // Check boundaries (optional in cover mode, but keeps edges clean if wave pushes too far)
             if (distortedUv.x < 0.0 || distortedUv.x > 1.0 || distortedUv.y < 0.0 || distortedUv.y > 1.0) {
                  finalOutput = vec4(lightColor, 1.0);
             } else {
                 vec4 texColor = texture2D(uTexture, distortedUv);
-                
-                // Grayscale
                 float grey = dot(texColor.rgb, vec3(0.299, 0.587, 0.114));
                 vec3 bgBase = vec3(grey); 
-                
-                // Add lights on top
                 finalOutput = vec4(bgBase + lightColor, 1.0);
             }
         } else {
@@ -153,16 +144,16 @@ export function ShaderAnimation({ imageUrl }: ShaderAnimationProps) {
     const scene = new THREE.Scene()
     const geometry = new THREE.PlaneGeometry(2, 2)
 
-    // Initialize waves array with negative start time (inactive)
+    // Initialize waves array
     const initialWaves = new Array(MAX_WAVES).fill(0).map(() => new THREE.Vector3(0, 0, -100.0));
 
-    // Load Texture if URL provided
+    // Load Texture
     let texture: THREE.Texture | null = null;
     
     const uniforms = {
       time: { type: "f", value: 0.0 },
       resolution: { type: "v2", value: new THREE.Vector2() },
-      imageResolution: { type: "v2", value: new THREE.Vector2(1, 1) }, // Default 1:1
+      imageResolution: { type: "v2", value: new THREE.Vector2(1, 1) },
       uWaves: { value: initialWaves },
       uTexture: { value: null },
       uHasTexture: { value: false }
@@ -179,7 +170,6 @@ export function ShaderAnimation({ imageUrl }: ShaderAnimationProps) {
                 tex.magFilter = THREE.LinearFilter;
                 uniforms.uTexture.value = tex;
                 uniforms.uHasTexture.value = true;
-                // Store actual image dimensions
                 uniforms.imageResolution.value.x = tex.image.width;
                 uniforms.imageResolution.value.y = tex.image.height;
             },
@@ -201,8 +191,8 @@ export function ShaderAnimation({ imageUrl }: ShaderAnimationProps) {
     const mesh = new THREE.Mesh(geometry, material)
     scene.add(mesh)
 
-    const renderer = new THREE.WebGLRenderer({ antialias: true })
-    const dpr = window.devicePixelRatio || 1;
+    const renderer = new THREE.WebGLRenderer({ antialias: false, powerPreference: "high-performance" }) // Disable antialias for performance, not needed for this shader effect
+    const dpr = Math.min(window.devicePixelRatio, 2); // Cap DPR to 2 for performance on high-res screens
     renderer.setPixelRatio(dpr)
     
     const width = container.clientWidth;
@@ -216,9 +206,12 @@ export function ShaderAnimation({ imageUrl }: ShaderAnimationProps) {
     // Handle interaction
     const handleInteraction = (clientX: number, clientY: number) => {
         if (!sceneRef.current) return;
+        
+        // Don't generate waves if paused/invisible
+        if (!isVisibleRef.current) return;
 
         const rect = container.getBoundingClientRect();
-        const dpr = window.devicePixelRatio || 1;
+        const dpr = Math.min(window.devicePixelRatio, 2);
         
         const scaleX = container.clientWidth / rect.width;
         const scaleY = container.clientHeight / rect.height;
@@ -232,21 +225,17 @@ export function ShaderAnimation({ imageUrl }: ShaderAnimationProps) {
         const waves = sceneRef.current.uniforms.uWaves.value;
         const currentTime = sceneRef.current.uniforms.time.value;
         
-        // Find the first available wave slot (finished or inactive)
         let freeSlotIndex = -1;
         
         for(let i = 0; i < MAX_WAVES; i++) {
             const w = waves[i];
             const elapsed = currentTime - w.z;
-            
-            // Check if wave is inactive (negative start time) or finished (elapsed > lifetime)
             if (w.z < 0 || elapsed > WAVE_LIFETIME) {
                 freeSlotIndex = i;
-                break; // Found one, stop searching
+                break;
             }
         }
 
-        // Only generate wave if a slot is free
         if (freeSlotIndex !== -1) {
             waves[freeSlotIndex].set(physicalMouseX, physicalMouseY, currentTime);
         }
@@ -265,7 +254,7 @@ export function ShaderAnimation({ imageUrl }: ShaderAnimationProps) {
 
     const onWindowResize = () => {
       if (!container) return;
-      const dpr = window.devicePixelRatio || 1;
+      const dpr = Math.min(window.devicePixelRatio, 2);
       const width = container.clientWidth
       const height = container.clientHeight
       renderer.setSize(width, height)
@@ -277,8 +266,12 @@ export function ShaderAnimation({ imageUrl }: ShaderAnimationProps) {
 
     const animate = () => {
       const animationId = requestAnimationFrame(animate)
-      uniforms.time.value += 0.015
-      renderer.render(scene, camera)
+      
+      // Only render if visible
+      if (isVisibleRef.current) {
+        uniforms.time.value += 0.015
+        renderer.render(scene, camera)
+      }
 
       if (sceneRef.current) {
         sceneRef.current.animationId = animationId
@@ -286,7 +279,7 @@ export function ShaderAnimation({ imageUrl }: ShaderAnimationProps) {
     }
 
     sceneRef.current = {
-      camera, scene, renderer, uniforms, animationId: 0, currentWaveIndex: 0
+      camera, scene, renderer, uniforms, animationId: 0
     }
 
     animate()
@@ -299,6 +292,7 @@ export function ShaderAnimation({ imageUrl }: ShaderAnimationProps) {
     }, 500);
 
     return () => {
+      observer.disconnect();
       window.removeEventListener("resize", onWindowResize)
       window.removeEventListener("click", onClick)
       window.removeEventListener("touchstart", onTouch)

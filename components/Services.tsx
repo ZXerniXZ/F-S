@@ -186,11 +186,11 @@ const Services: React.FC<ServicesProps> = ({ lang }) => {
         onMouseMove={handleMouseMove}
         onMouseEnter={handleMouseEnter}
         onMouseLeave={handleMouseLeave}
-        className="py-20 md:py-32 bg-slate-950 relative border-t border-slate-900/50 overflow-hidden"
+        className="py-20 md:py-32 bg-slate-50 dark:bg-slate-950 relative border-t border-slate-200 dark:border-slate-900/50 overflow-hidden transition-colors duration-300"
       >
-        {/* Global Spotlight Gradient Overlay (Covering the whole section) */}
+        {/* Global Spotlight Gradient Overlay */}
         <div 
-            className="pointer-events-none absolute inset-0 transition-opacity duration-300 z-0"
+            className="pointer-events-none absolute inset-0 transition-opacity duration-300 z-0 dark:block hidden"
             style={{
                 opacity,
                 background: `radial-gradient(600px circle at ${position.x}px ${position.y}px, rgba(99, 102, 241, 0.06), transparent 40%)`
@@ -202,10 +202,10 @@ const Services: React.FC<ServicesProps> = ({ lang }) => {
           {/* Section Header */}
           <div className="flex flex-col md:flex-row justify-between items-end mb-12 md:mb-24 gap-6 md:gap-8">
             <div>
-              <span className="text-indigo-400/80 font-semibold tracking-[0.2em] uppercase text-xs">{t.expertise}</span>
-              <h2 className="text-4xl md:text-6xl text-white mt-4 font-serif italic">{t.title}</h2>
+              <span className="text-indigo-600 dark:text-indigo-400/80 font-semibold tracking-[0.2em] uppercase text-xs">{t.expertise}</span>
+              <h2 className="text-4xl md:text-6xl text-slate-900 dark:text-white mt-4 font-serif italic">{t.title}</h2>
             </div>
-            <p className="text-slate-400 max-w-sm text-sm md:text-base leading-relaxed hidden md:block border-l border-indigo-500/30 pl-6">
+            <p className="text-slate-600 dark:text-slate-400 max-w-sm text-sm md:text-base leading-relaxed hidden md:block border-l border-indigo-500/30 pl-6">
               {t.description}
             </p>
           </div>
@@ -215,38 +215,38 @@ const Services: React.FC<ServicesProps> = ({ lang }) => {
             {servicesData.map((service, index) => (
               <div 
                   key={index} 
-                  className="group relative flex flex-col h-full bg-slate-900/40 backdrop-blur-sm border border-slate-800/60 hover:border-indigo-500/30 rounded-xl p-8 transition-all duration-300 hover:-translate-y-1 hover:shadow-2xl hover:shadow-indigo-500/10 z-10"
+                  className="group relative flex flex-col h-full bg-white dark:bg-slate-900/40 backdrop-blur-sm border border-slate-200 dark:border-slate-800/60 hover:border-indigo-500/30 dark:hover:border-indigo-500/30 rounded-xl p-8 transition-all duration-300 hover:-translate-y-1 hover:shadow-2xl hover:shadow-indigo-500/10 z-10"
               >
                 {/* Header */}
                 <div className="flex justify-between items-start mb-8 relative z-20">
-                    <div className="p-3 rounded-lg bg-slate-800/50 text-indigo-400 group-hover:bg-indigo-500 group-hover:text-white transition-colors duration-300">
+                    <div className="p-3 rounded-lg bg-indigo-50 dark:bg-slate-800/50 text-indigo-600 dark:text-indigo-400 group-hover:bg-indigo-600 dark:group-hover:bg-indigo-500 group-hover:text-white transition-colors duration-300">
                       {service.icon}
                     </div>
-                    <span className="px-3 py-1 rounded-full border border-slate-700 bg-slate-900/50 text-[10px] uppercase tracking-widest text-slate-400 font-bold group-hover:border-indigo-500/30 group-hover:text-indigo-300 transition-colors">
+                    <span className="px-3 py-1 rounded-full border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-900/50 text-[10px] uppercase tracking-widest text-slate-500 dark:text-slate-400 font-bold group-hover:border-indigo-500/30 group-hover:text-indigo-500 dark:group-hover:text-indigo-300 transition-colors">
                         {service.badge}
                     </span>
                 </div>
 
                 {/* Content */}
-                <h4 className="text-xs font-bold text-slate-500 uppercase tracking-widest mb-3 relative z-20 group-hover:text-slate-400">{service.subtitle}</h4>
-                <h3 className="text-2xl lg:text-3xl font-serif text-slate-100 mb-6 group-hover:text-white transition-colors relative z-20">
+                <h4 className="text-xs font-bold text-slate-500 dark:text-slate-500 uppercase tracking-widest mb-3 relative z-20 group-hover:text-slate-700 dark:group-hover:text-slate-400">{service.subtitle}</h4>
+                <h3 className="text-2xl lg:text-3xl font-serif text-slate-900 dark:text-slate-100 mb-6 group-hover:text-indigo-600 dark:group-hover:text-white transition-colors relative z-20">
                     {service.title}
                 </h3>
                 
                 <div className="flex-grow relative z-20">
-                    <p className="text-slate-400 leading-relaxed font-light text-sm">
+                    <p className="text-slate-600 dark:text-slate-400 leading-relaxed font-light text-sm">
                       {service.description}
                     </p>
                 </div>
                 
                 {/* Footer / CTA */}
-                <div className="mt-8 pt-6 border-t border-slate-800/50 group-hover:border-indigo-500/20 relative z-20">
+                <div className="mt-8 pt-6 border-t border-slate-100 dark:border-slate-800/50 group-hover:border-indigo-500/20 relative z-20">
                   <button 
                       onClick={() => setSelectedService(service)}
-                      className="flex items-center justify-between w-full text-xs font-bold text-slate-300 uppercase tracking-widest group-hover:text-white transition-colors"
+                      className="flex items-center justify-between w-full text-xs font-bold text-slate-600 dark:text-slate-300 uppercase tracking-widest group-hover:text-indigo-600 dark:group-hover:text-white transition-colors"
                   >
                     <span>{t.learnMore}</span>
-                    <div className="w-8 h-8 rounded-full border border-slate-700 flex items-center justify-center group-hover:bg-indigo-500 group-hover:border-indigo-500 transition-all duration-300">
+                    <div className="w-8 h-8 rounded-full border border-slate-200 dark:border-slate-700 flex items-center justify-center group-hover:bg-indigo-600 dark:group-hover:bg-indigo-500 group-hover:border-indigo-600 dark:group-hover:border-indigo-500 group-hover:text-white transition-all duration-300">
                       <ArrowRight className="w-4 h-4" />
                     </div>
                   </button>
@@ -270,32 +270,32 @@ const Services: React.FC<ServicesProps> = ({ lang }) => {
                     className={`
                       relative snap-center flex-shrink-0 w-[85vw] p-6 rounded-2xl border transition-all duration-500 ease-out flex flex-col justify-between min-h-[380px]
                       ${isActive 
-                        ? 'bg-slate-900/80 border-indigo-500/50 shadow-[0_0_30px_rgba(99,102,241,0.15)] scale-100 opacity-100' 
-                        : 'bg-slate-950 border-slate-800 scale-95 opacity-60'
+                        ? 'bg-white dark:bg-slate-900/80 border-indigo-500/50 shadow-xl dark:shadow-[0_0_30px_rgba(99,102,241,0.15)] scale-100 opacity-100' 
+                        : 'bg-slate-50 dark:bg-slate-950 border-slate-200 dark:border-slate-800 scale-95 opacity-60'
                       }
                     `}
                   >
                     <div>
                       <div className="flex justify-between items-start mb-6">
-                        <div className={`p-3 rounded-xl transition-colors duration-500 ${isActive ? 'bg-indigo-500/20 text-indigo-300' : 'bg-slate-900 text-slate-600'}`}>
+                        <div className={`p-3 rounded-xl transition-colors duration-500 ${isActive ? 'bg-indigo-500/10 dark:bg-indigo-500/20 text-indigo-600 dark:text-indigo-300' : 'bg-slate-100 dark:bg-slate-900 text-slate-500 dark:text-slate-600'}`}>
                           {service.icon}
                         </div>
-                        <span className={`text-[10px] uppercase tracking-widest px-2 py-1 rounded border ${isActive ? 'border-indigo-500/30 text-indigo-300' : 'border-slate-800 text-slate-600'}`}>
+                        <span className={`text-[10px] uppercase tracking-widest px-2 py-1 rounded border ${isActive ? 'border-indigo-500/30 text-indigo-600 dark:text-indigo-300' : 'border-slate-200 dark:border-slate-800 text-slate-500 dark:text-slate-600'}`}>
                           {service.badge}
                         </span>
                       </div>
                       <h4 className="text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-2">{service.subtitle}</h4>
-                      <h3 className={`text-2xl font-serif mb-4 transition-colors ${isActive ? 'text-white' : 'text-slate-400'}`}>
+                      <h3 className={`text-2xl font-serif mb-4 transition-colors ${isActive ? 'text-slate-900 dark:text-white' : 'text-slate-400 dark:text-slate-400'}`}>
                         {service.title}
                       </h3>
-                      <p className="text-slate-400 text-sm font-light leading-relaxed">
+                      <p className="text-slate-600 dark:text-slate-400 text-sm font-light leading-relaxed">
                         {service.description}
                       </p>
                     </div>
-                    <div className={`mt-6 pt-6 border-t ${isActive ? 'border-indigo-500/20' : 'border-slate-800'}`}>
+                    <div className={`mt-6 pt-6 border-t ${isActive ? 'border-indigo-500/20' : 'border-slate-200 dark:border-slate-800'}`}>
                       <button 
                           onClick={() => setSelectedService(service)}
-                          className={`flex items-center justify-between w-full text-xs font-bold uppercase tracking-widest ${isActive ? 'text-white' : 'text-slate-600'}`}
+                          className={`flex items-center justify-between w-full text-xs font-bold uppercase tracking-widest ${isActive ? 'text-indigo-600 dark:text-white' : 'text-slate-500 dark:text-slate-600'}`}
                       >
                           {t.learnMore} <ArrowRight className={`w-3 h-3 ml-2 transition-transform ${isActive ? 'translate-x-1' : ''}`} />
                       </button>
@@ -308,7 +308,7 @@ const Services: React.FC<ServicesProps> = ({ lang }) => {
               {servicesData.map((_, i) => (
                 <div 
                   key={i}
-                  className={`h-1 rounded-full transition-all duration-300 ${i === activeSlide ? 'w-8 bg-indigo-500' : 'w-2 bg-slate-800'}`}
+                  className={`h-1 rounded-full transition-all duration-300 ${i === activeSlide ? 'w-8 bg-indigo-500' : 'w-2 bg-slate-300 dark:bg-slate-800'}`}
                 />
               ))}
             </div>
@@ -319,19 +319,19 @@ const Services: React.FC<ServicesProps> = ({ lang }) => {
 
       {/* --- FULL SCREEN DETAIL PAGE OVERLAY --- */}
       {selectedService && (
-        <div className="fixed inset-0 z-[100] bg-slate-950 flex flex-col animate-in slide-in-from-bottom-10 duration-500 overflow-y-auto">
+        <div className="fixed inset-0 z-[100] bg-slate-50 dark:bg-slate-950 flex flex-col animate-in slide-in-from-bottom-10 duration-500 overflow-y-auto">
           
           {/* Nav / Close */}
-          <div className="sticky top-0 z-50 flex items-center justify-between p-6 md:p-8 bg-slate-950/80 backdrop-blur-md border-b border-slate-900">
+          <div className="sticky top-0 z-50 flex items-center justify-between p-6 md:p-8 bg-slate-50/80 dark:bg-slate-950/80 backdrop-blur-md border-b border-slate-200 dark:border-slate-900">
              <button 
                 onClick={() => setSelectedService(null)}
-                className="flex items-center gap-2 text-slate-400 hover:text-white transition-colors uppercase text-xs font-bold tracking-widest"
+                className="flex items-center gap-2 text-slate-500 dark:text-slate-400 hover:text-indigo-600 dark:hover:text-white transition-colors uppercase text-xs font-bold tracking-widest"
              >
                 <ArrowLeft className="w-4 h-4" /> {t.back}
              </button>
              <button 
                 onClick={() => setSelectedService(null)}
-                className="p-2 rounded-full hover:bg-slate-800 text-slate-400 hover:text-white transition-colors"
+                className="p-2 rounded-full hover:bg-slate-200 dark:hover:bg-slate-800 text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white transition-colors"
              >
                 <X className="w-6 h-6" />
              </button>
@@ -342,33 +342,33 @@ const Services: React.FC<ServicesProps> = ({ lang }) => {
              {/* Header */}
              <div className="mb-12">
                 <div className="flex items-center gap-4 mb-6">
-                   <div className="p-3 md:p-4 rounded-xl bg-indigo-500/10 text-indigo-400 border border-indigo-500/20">
+                   <div className="p-3 md:p-4 rounded-xl bg-indigo-500/10 text-indigo-600 dark:text-indigo-400 border border-indigo-500/20">
                       {selectedService.icon}
                    </div>
-                   <span className="px-3 py-1 rounded-full border border-indigo-500/30 bg-indigo-500/10 text-[10px] md:text-xs uppercase tracking-widest text-indigo-300 font-bold">
+                   <span className="px-3 py-1 rounded-full border border-indigo-500/30 bg-indigo-500/10 text-[10px] md:text-xs uppercase tracking-widest text-indigo-600 dark:text-indigo-300 font-bold">
                        {selectedService.badge}
                    </span>
                 </div>
                 <h4 className="text-sm font-bold text-slate-500 uppercase tracking-widest mb-3">{selectedService.subtitle}</h4>
-                <h2 className="text-4xl md:text-6xl font-serif text-white leading-tight mb-8">
+                <h2 className="text-4xl md:text-6xl font-serif text-slate-900 dark:text-white leading-tight mb-8">
                     {selectedService.title}
                 </h2>
-                <p className="text-lg md:text-xl text-slate-300 font-light leading-relaxed max-w-2xl">
+                <p className="text-lg md:text-xl text-slate-600 dark:text-slate-300 font-light leading-relaxed max-w-2xl">
                     {selectedService.longDescription}
                 </p>
              </div>
 
              {/* Divider */}
-             <div className="w-full h-px bg-gradient-to-r from-transparent via-slate-800 to-transparent my-12"></div>
+             <div className="w-full h-px bg-gradient-to-r from-transparent via-slate-300 dark:via-slate-800 to-transparent my-12"></div>
 
              {/* Features Grid */}
              <div className="grid grid-cols-1 md:grid-cols-2 gap-12">
                 <div>
-                   <h3 className="text-xl font-serif text-white mb-6">{t.featuresTitle}</h3>
+                   <h3 className="text-xl font-serif text-slate-900 dark:text-white mb-6">{t.featuresTitle}</h3>
                    <ul className="space-y-4">
                       {selectedService.features.map((feature, idx) => (
-                         <li key={idx} className="flex items-start gap-3 text-slate-400 group">
-                            <CheckCircle2 className="w-5 h-5 text-indigo-500 shrink-0 mt-0.5 group-hover:text-indigo-400 transition-colors" />
+                         <li key={idx} className="flex items-start gap-3 text-slate-600 dark:text-slate-400 group">
+                            <CheckCircle2 className="w-5 h-5 text-indigo-500 shrink-0 mt-0.5 group-hover:text-indigo-600 dark:group-hover:text-indigo-400 transition-colors" />
                             <span className="leading-relaxed">{feature}</span>
                          </li>
                       ))}
@@ -376,15 +376,15 @@ const Services: React.FC<ServicesProps> = ({ lang }) => {
                 </div>
                 
                 {/* CTA Card */}
-                <div className="bg-slate-900 border border-slate-800 rounded-xl p-8 flex flex-col justify-center items-center text-center">
-                   <h3 className="text-xl font-serif text-white mb-2">Ready to start?</h3>
-                   <p className="text-slate-400 text-sm mb-6">Contattaci per un preventivo personalizzato su questo servizio.</p>
+                <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl p-8 flex flex-col justify-center items-center text-center shadow-sm">
+                   <h3 className="text-xl font-serif text-slate-900 dark:text-white mb-2">Ready to start?</h3>
+                   <p className="text-slate-500 dark:text-slate-400 text-sm mb-6">Contattaci per un preventivo personalizzato su questo servizio.</p>
                    <button 
                       onClick={() => {
                         setSelectedService(null);
                         setTimeout(() => document.getElementById('contact')?.scrollIntoView({behavior: 'smooth'}), 100);
                       }}
-                      className="w-full py-4 bg-white text-slate-950 font-bold uppercase tracking-widest text-xs hover:bg-indigo-50 transition-colors rounded-sm"
+                      className="w-full py-4 bg-slate-900 dark:bg-white text-white dark:text-slate-950 font-bold uppercase tracking-widest text-xs hover:bg-indigo-600 dark:hover:bg-indigo-50 transition-colors rounded-sm shadow-lg"
                    >
                       {t.bookService}
                    </button>

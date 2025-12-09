@@ -19,9 +19,16 @@ const Navbar: React.FC<NavbarProps> = ({ lang, setLang, isDarkMode, toggleTheme 
 
   useEffect(() => {
     const handleScroll = () => {
-      setIsScrolled(window.scrollY > 20);
+      // Optimization: Only update state if value changes to avoid re-renders
+      const shouldBeScrolled = window.scrollY > 20;
+      setIsScrolled(prev => {
+        if (prev !== shouldBeScrolled) return shouldBeScrolled;
+        return prev;
+      });
     };
-    window.addEventListener('scroll', handleScroll);
+    
+    // Use passive listener for better scroll performance
+    window.addEventListener('scroll', handleScroll, { passive: true });
     return () => window.removeEventListener('scroll', handleScroll);
   }, []);
 

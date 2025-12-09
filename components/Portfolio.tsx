@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { X, ZoomIn } from 'lucide-react';
 import { Language } from '../types';
@@ -80,22 +81,22 @@ const Portfolio: React.FC<PortfolioProps> = ({ lang }) => {
       {works.map((work, idx) => (
         <div 
             key={idx} 
-            className="group cursor-pointer relative rounded-lg overflow-hidden border border-slate-800/50 hover:border-indigo-500/50 transition-colors"
+            className="group cursor-pointer relative rounded-lg overflow-hidden border border-slate-200 dark:border-slate-800/50 hover:border-indigo-500/50 transition-colors bg-white dark:bg-transparent shadow-sm dark:shadow-none"
             onClick={() => setSelectedImage(work)}
         >
           <div className="relative aspect-[4/3] overflow-hidden">
             <img 
               src={work.url} 
               alt={work.client} 
-              className="w-full h-full object-cover transform transition-transform duration-700 ease-out group-hover:scale-105 opacity-80 group-hover:opacity-100"
+              className="w-full h-full object-cover transform transition-transform duration-700 ease-out group-hover:scale-105 opacity-90 dark:opacity-80 group-hover:opacity-100"
             />
             <div className="absolute inset-0 bg-black/0 group-hover:bg-black/20 transition-colors duration-300 flex items-center justify-center opacity-0 group-hover:opacity-100">
                 <ZoomIn className="text-white w-8 h-8 opacity-80" />
             </div>
           </div>
-          <div className="p-4 bg-slate-900/40 backdrop-blur-sm">
-             <h4 className="text-slate-200 font-serif italic text-lg">{work.client}</h4>
-             <span className="text-xs text-indigo-400 uppercase tracking-widest">{work.category}</span>
+          <div className="p-4 bg-white dark:bg-slate-900/40 backdrop-blur-sm">
+             <h4 className="text-slate-800 dark:text-slate-200 font-serif italic text-lg">{work.client}</h4>
+             <span className="text-xs text-indigo-600 dark:text-indigo-400 uppercase tracking-widest">{work.category}</span>
           </div>
         </div>
       ))}
@@ -141,12 +142,12 @@ const Portfolio: React.FC<PortfolioProps> = ({ lang }) => {
           <div className="grid grid-cols-2 gap-4">
              <img 
                 src="https://images.unsplash.com/photo-1533174072545-e8d4aa97edf9?q=80&w=1000&auto=format&fit=crop"
-                className="rounded-lg object-cover h-20 md:h-44 lg:h-60 w-full opacity-50 hover:opacity-100 transition-opacity duration-500"
+                className="rounded-lg object-cover h-20 md:h-44 lg:h-60 w-full opacity-70 hover:opacity-100 transition-opacity duration-500"
                 alt="Early days"
              />
              <img 
                 src="https://images.unsplash.com/photo-1516035069371-29a1b244cc32?q=80&w=1000&auto=format&fit=crop"
-                className="rounded-lg object-cover h-20 md:h-44 lg:h-60 w-full opacity-50 hover:opacity-100 transition-opacity duration-500"
+                className="rounded-lg object-cover h-20 md:h-44 lg:h-60 w-full opacity-70 hover:opacity-100 transition-opacity duration-500"
                 alt="Camera gear"
              />
           </div>
@@ -156,12 +157,12 @@ const Portfolio: React.FC<PortfolioProps> = ({ lang }) => {
   ];
 
   return (
-    <section id="portfolio" className="bg-slate-50 dark:bg-slate-950 border-t border-slate-200 dark:border-slate-900/50">
+    <section id="portfolio" className="bg-slate-50 dark:bg-slate-950 border-t border-slate-200 dark:border-slate-900/50 transition-colors duration-300">
       
       {/* Header Section outside timeline for title */}
       <div className="pt-20 md:pt-32 px-6 max-w-7xl mx-auto">
         <div className="mb-4 text-center md:text-left">
-          <span className="text-indigo-500 dark:text-indigo-400/80 font-semibold tracking-[0.2em] uppercase text-xs">{t.subtitle}</span>
+          <span className="text-indigo-600 dark:text-indigo-400/80 font-semibold tracking-[0.2em] uppercase text-xs">{t.subtitle}</span>
           <h2 className="text-3xl md:text-5xl text-slate-900 dark:text-white mt-4 font-serif">{t.title}</h2>
           <p className="text-slate-600 dark:text-slate-400 mt-4 max-w-xl font-light">
             {t.description}
