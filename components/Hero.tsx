@@ -3,6 +3,7 @@ import React, { useEffect, useState } from 'react';
 import { ChevronDown } from 'lucide-react';
 import { Language } from '../types';
 import { ShaderAnimation } from './ui/ShaderAnimation';
+import { Typewriter } from './ui/Typewriter';
 
 interface HeroProps {
   lang: Language;
@@ -28,13 +29,12 @@ const Hero: React.FC<HeroProps> = ({ lang }) => {
 
   const content = {
     it: {
-      headline: <>La tua notte, <br/><span className="italic text-slate-400 font-normal">raccontata con stile.</span></>,
+      // Headline is handled dynamically in JSX for Typewriter integration
       description: "Produciamo contenuti fotografici ad alto impatto per feste, club, festival e progetti privati. Qualità da magazine, velocità da social: editing raffinato, storytelling visivo e consegne rapide per valorizzare ogni momento.",
       btnPortfolio: "Vedi Portfolio",
       btnServices: "I Nostri Servizi"
     },
     en: {
-      headline: <>Your night, <br/><span className="italic text-slate-400 font-normal">told with style.</span></>,
       description: "We produce high-impact photographic content for parties, clubs, festivals, and private projects. Magazine quality, social speed: refined editing, visual storytelling, and rapid delivery to enhance every moment.",
       btnPortfolio: "View Portfolio",
       btnServices: "Our Services"
@@ -49,6 +49,10 @@ const Hero: React.FC<HeroProps> = ({ lang }) => {
   
   // Using the specific Drive ID provided
   const bgImage = getDriveLink("1Cj0Htsro1vSWYimabgq1KEdAYD9fKtqA");
+
+  const typewriterWords = lang === 'it' 
+    ? ["notte", "storia", "festa", "occasione", "serata"]
+    : ["night", "story", "party", "occasion", "evening"];
 
   return (
     <section id="hero" className="relative h-screen w-full flex items-center justify-center overflow-hidden bg-slate-950">
@@ -82,7 +86,19 @@ const Hero: React.FC<HeroProps> = ({ lang }) => {
         </div>
         
         <h1 className="text-4xl sm:text-5xl md:text-7xl lg:text-8xl text-white mb-6 md:mb-8 leading-[1.1] font-medium text-glow-subtle">
-          {t.headline}
+          {lang === 'it' ? "La tua " : "Your "}
+          <Typewriter
+            text={typewriterWords}
+            speed={70}
+            waitTime={1500}
+            deleteSpeed={40}
+            cursorChar={"_"}
+            className="text-indigo-400 font-serif"
+          />
+          <br/>
+          <span className="italic text-slate-400 font-normal">
+            {lang === 'it' ? "raccontata con stile." : "told with style."}
+          </span>
         </h1>
         
         <p className="text-sm md:text-lg text-slate-400 max-w-xl mx-auto font-light leading-relaxed mb-10 md:mb-12">
