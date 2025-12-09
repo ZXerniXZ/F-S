@@ -48,6 +48,8 @@ const CustomCursor: React.FC = () => {
     };
   }, [isVisible]);
 
+  if (!isVisible) return null;
+
   return (
     <div
       className="custom-cursor fixed top-0 left-0 pointer-events-none z-[9999] mix-blend-difference"
@@ -56,10 +58,16 @@ const CustomCursor: React.FC = () => {
       }}
     >
       <div
-        className={`relative -translate-x-1/2 -translate-y-1/2 rounded-full bg-white transition-all duration-300 ease-out
-        ${isHovering ? 'w-16 h-16 opacity-50' : 'w-4 h-4 opacity-100'}
+        className={`relative -translate-x-1/2 -translate-y-1/2 rounded-full border border-white transition-all duration-300 ease-out flex items-center justify-center
+        ${isHovering 
+            ? 'w-12 h-12 bg-white/10' 
+            : 'w-5 h-5 bg-transparent'
+        }
         `}
-      />
+      >
+        {/* Tiny center point for precision */}
+        <div className={`bg-white rounded-full transition-all duration-300 ${isHovering ? 'w-0.5 h-0.5 opacity-50' : 'w-1 h-1 opacity-100'}`} />
+      </div>
     </div>
   );
 };
