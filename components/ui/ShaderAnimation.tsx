@@ -118,10 +118,15 @@ export function ShaderAnimation() {
     scene.add(mesh)
 
     const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true })
-    renderer.setPixelRatio(window.devicePixelRatio)
-    renderer.setSize(container.clientWidth, container.clientHeight)
-    uniforms.resolution.value.x = container.clientWidth
-    uniforms.resolution.value.y = container.clientHeight
+    const dpr = window.devicePixelRatio || 1;
+    renderer.setPixelRatio(dpr)
+    
+    // IMPORTANT: Set uniform resolution to physical pixels (width * dpr)
+    const width = container.clientWidth;
+    const height = container.clientHeight;
+    renderer.setSize(width, height)
+    uniforms.resolution.value.x = width * dpr
+    uniforms.resolution.value.y = height * dpr
 
     container.appendChild(renderer.domElement)
 
@@ -130,23 +135,26 @@ export function ShaderAnimation() {
         if (!sceneRef.current) return;
 
         const rect = container.getBoundingClientRect();
+        const dpr = window.devicePixelRatio || 1;
         
-        // CRITICAL FIX: Calculate scale factor between visual size (rect) and internal resolution (clientWidth)
-        // This accounts for CSS transforms like scale(1.1) used in the Hero component
+        // Scale factor for CSS transforms (e.g. scale(1.1) in Hero)
         const scaleX = container.clientWidth / rect.width;
         const scaleY = container.clientHeight / rect.height;
 
-        // Calculate X relative to the element, then scale to internal canvas coordinates
-        const mouseX = (clientX - rect.left) * scaleX;
-        
-        // Calculate Y relative to element (flipped for WebGL), then scale
-        const mouseY = (rect.height - (clientY - rect.top)) * scaleY;
+        // 1. Calculate relative position in CSS pixels
+        // 2. Scale by internal/visual ratio (to fix CSS transforms)
+        // 3. Multiply by DPR to match gl_FragCoord (Physical Pixels)
+        const cssMouseX = (clientX - rect.left) * scaleX;
+        const cssMouseY = (rect.height - (clientY - rect.top)) * scaleY; // Flip Y for WebGL
+
+        const physicalMouseX = cssMouseX * dpr;
+        const physicalMouseY = cssMouseY * dpr;
         
         // Update the current wave in the ring buffer
         const idx = sceneRef.current.currentWaveIndex;
         const waves = sceneRef.current.uniforms.uWaves.value;
         
-        waves[idx].set(mouseX, mouseY, sceneRef.current.uniforms.time.value);
+        waves[idx].set(physicalMouseX, physicalMouseY, sceneRef.current.uniforms.time.value);
         
         // Advance index (Ring buffer)
         sceneRef.current.currentWaveIndex = (idx + 1) % MAX_WAVES;
@@ -168,17 +176,21 @@ export function ShaderAnimation() {
     }
 
     window.addEventListener("click", onClick);
-    window.addEventListener("touchstart", onTouch, { passive: true }); // Passive helps with scroll performance
+    window.addEventListener("touchstart", onTouch, { passive: true });
     window.addEventListener("touchmove", onTouch, { passive: true });
 
     // Handle window resize
     const onWindowResize = () => {
       if (!container) return;
+      const dpr = window.devicePixelRatio || 1;
       const width = container.clientWidth
       const height = container.clientHeight
+      
       renderer.setSize(width, height)
-      uniforms.resolution.value.x = width
-      uniforms.resolution.value.y = height
+      
+      // Update uniforms with physical pixel size
+      uniforms.resolution.value.x = width * dpr
+      uniforms.resolution.value.y = height * dpr
     }
 
     window.addEventListener("resize", onWindowResize, false)
