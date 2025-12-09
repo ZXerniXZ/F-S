@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { Menu, X, Aperture, Languages, Moon, Sun } from 'lucide-react';
+import { Menu, X, Aperture, Languages, Moon, Sun, ArrowRight } from 'lucide-react';
 import { Language } from '../types';
 
 interface NavbarProps {
@@ -19,7 +19,7 @@ const Navbar: React.FC<NavbarProps> = ({ lang, setLang, isDarkMode, toggleTheme 
 
   useEffect(() => {
     const handleScroll = () => {
-      setIsScrolled(window.scrollY > 50);
+      setIsScrolled(window.scrollY > 20);
     };
     window.addEventListener('scroll', handleScroll);
     return () => window.removeEventListener('scroll', handleScroll);
@@ -28,7 +28,16 @@ const Navbar: React.FC<NavbarProps> = ({ lang, setLang, isDarkMode, toggleTheme 
   const scrollTo = (id: string) => {
     const element = document.getElementById(id);
     if (element) {
-      element.scrollIntoView({ behavior: 'smooth' });
+      const offset = 80; // Header height offset
+      const bodyRect = document.body.getBoundingClientRect().top;
+      const elementRect = element.getBoundingClientRect().top;
+      const elementPosition = elementRect - bodyRect;
+      const offsetPosition = elementPosition - offset;
+
+      window.scrollTo({
+        top: offsetPosition,
+        behavior: 'smooth'
+      });
       setIsMobileMenuOpen(false);
     }
   };
@@ -72,23 +81,23 @@ const Navbar: React.FC<NavbarProps> = ({ lang, setLang, isDarkMode, toggleTheme 
       <nav 
         className={`fixed top-0 left-0 right-0 z-50 transition-all duration-500 border-b 
         ${isScrolled 
-            ? 'bg-white/80 dark:bg-slate-950/80 backdrop-blur-md border-slate-200 dark:border-slate-800 py-4 shadow-sm' 
-            : 'bg-transparent border-transparent py-6 md:py-8'}`}
+            ? 'bg-white/80 dark:bg-slate-950/80 backdrop-blur-md border-slate-200 dark:border-slate-800 py-3 md:py-4 shadow-sm' 
+            : 'bg-transparent border-transparent py-5 md:py-8'}`}
       >
         <div className="max-w-7xl mx-auto px-6 flex items-center justify-between">
           
           {/* Logo Area */}
-          <div className="flex items-center gap-3 cursor-pointer group" onClick={() => scrollTo('hero')}>
-            <div className={`p-2 rounded-lg transition-colors duration-300 ${isScrolled ? 'bg-indigo-50 dark:bg-indigo-950/30' : 'bg-transparent'}`}>
-                <Aperture className={`w-6 h-6 transition-colors ${isScrolled ? 'text-indigo-600 dark:text-slate-100' : 'text-slate-100'}`} />
+          <div className="flex items-center gap-3 cursor-pointer group relative z-50" onClick={() => scrollTo('hero')}>
+            <div className={`p-2 rounded-lg transition-colors duration-300 ${isScrolled ? 'bg-indigo-50 dark:bg-indigo-950/30' : 'bg-white/10 backdrop-blur-sm'}`}>
+                <Aperture className={`w-5 h-5 md:w-6 md:h-6 transition-colors ${isScrolled ? 'text-indigo-600 dark:text-slate-100' : 'text-slate-100'}`} />
             </div>
             <div className="flex flex-col">
-              <span className={`font-serif font-bold text-xl tracking-wide leading-none transition-colors ${isScrolled ? 'text-slate-900 dark:text-slate-100' : 'text-slate-100'}`}>F&S</span>
-              <span className={`text-[9px] uppercase tracking-[0.3em] transition-colors ${isScrolled ? 'text-slate-500 dark:text-slate-400' : 'text-slate-300/80'}`}>Photography</span>
+              <span className={`font-serif font-bold text-lg md:text-xl tracking-wide leading-none transition-colors ${isScrolled ? 'text-slate-900 dark:text-slate-100' : 'text-slate-100'}`}>F&S</span>
+              <span className={`text-[8px] md:text-[9px] uppercase tracking-[0.3em] transition-colors ${isScrolled ? 'text-slate-500 dark:text-slate-400' : 'text-slate-300/80'}`}>Photography</span>
             </div>
           </div>
 
-          {/* Center Navigation (Dynamic Pill) */}
+          {/* Center Navigation (Dynamic Pill) - DESKTOP */}
           <div className="hidden md:flex items-center absolute left-1/2 transform -translate-x-1/2">
             <div 
                 ref={navRef}
@@ -127,7 +136,7 @@ const Navbar: React.FC<NavbarProps> = ({ lang, setLang, isDarkMode, toggleTheme 
             </div>
           </div>
 
-          {/* Right Actions */}
+          {/* Right Actions - DESKTOP */}
           <div className="hidden md:flex items-center gap-4">
             
             {/* Theme Toggle */}
@@ -163,54 +172,66 @@ const Navbar: React.FC<NavbarProps> = ({ lang, setLang, isDarkMode, toggleTheme 
             </button>
           </div>
 
-          {/* Mobile Toggle */}
-          <div className="flex items-center gap-4 md:hidden">
-            <button 
+          {/* Mobile Toggle & Actions */}
+          <div className="flex items-center gap-2 md:hidden relative z-50">
+             <button 
                 onClick={toggleTheme}
-                className={`p-2 rounded-full ${isScrolled ? 'text-slate-900 dark:text-white' : 'text-white'}`}
+                className={`p-2 rounded-full transition-all active:scale-95 ${isScrolled ? 'text-slate-600 dark:text-slate-300 bg-slate-100 dark:bg-slate-800' : 'text-white bg-white/10 backdrop-blur-sm'}`}
             >
-                 {isDarkMode ? <Sun className="w-5 h-5" /> : <Moon className="w-5 h-5" />}
+                 {isDarkMode ? <Sun className="w-4 h-4" /> : <Moon className="w-4 h-4" />}
             </button>
             <button 
-                className={`opacity-80 hover:opacity-100 ${isScrolled ? 'text-slate-900 dark:text-white' : 'text-white'}`} 
+                className={`p-2 rounded-full transition-all active:scale-95 ${isScrolled ? 'text-slate-900 dark:text-white bg-slate-100 dark:bg-slate-800' : 'text-white bg-white/10 backdrop-blur-sm'}`} 
                 onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
             >
-              {isMobileMenuOpen ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
+              {isMobileMenuOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
             </button>
           </div>
         </div>
 
-        {/* Mobile Menu Overlay */}
+        {/* Mobile Floating Menu (Glass Card) */}
         {isMobileMenuOpen && (
-          <div className="absolute top-full left-0 w-full bg-slate-50 dark:bg-slate-950 border-b border-slate-200 dark:border-slate-800 p-8 flex flex-col gap-6 md:hidden animate-in slide-in-from-top-5 shadow-2xl">
-            {menuItems[lang].map((item) => (
-              <button 
-                key={item.id}
-                onClick={() => scrollTo(item.id)}
-                className="text-2xl font-serif text-slate-800 dark:text-slate-300 hover:text-indigo-600 dark:hover:text-white text-left transition-colors"
-              >
-                {item.label}
-              </button>
-            ))}
-            
-            <div className="h-px bg-slate-200 dark:bg-slate-800 w-full my-2"></div>
-            
-            <div className="flex justify-between items-center">
+          <div className="absolute top-20 left-4 right-4 md:hidden z-40 animate-in zoom-in-95 fade-in duration-300 origin-top">
+            <div className="bg-white/95 dark:bg-slate-900/95 backdrop-blur-xl border border-white/20 dark:border-slate-700/50 rounded-2xl shadow-2xl p-6 flex flex-col gap-2">
+                
+                {menuItems[lang].map((item, idx) => (
                 <button 
-                    onClick={() => setLang(lang === 'it' ? 'en' : 'it')}
-                    className="flex items-center gap-2 text-sm font-bold text-slate-600 dark:text-slate-400 uppercase tracking-widest"
+                    key={item.id}
+                    onClick={() => scrollTo(item.id)}
+                    className="group flex items-center justify-between w-full p-4 rounded-xl hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors"
+                    style={{ animationDelay: `${idx * 50}ms` }}
                 >
-                    <Languages className="w-4 h-4" />
-                    {lang === 'it' ? 'English' : 'Italiano'}
+                    <span className="text-lg font-serif text-slate-800 dark:text-slate-200">{item.label}</span>
+                    <ArrowRight className="w-4 h-4 text-slate-400 group-hover:text-indigo-500 group-hover:translate-x-1 transition-all" />
                 </button>
+                ))}
+                
+                <div className="h-px bg-slate-200 dark:bg-slate-800 w-full my-2"></div>
+                
+                <div className="flex items-center justify-between p-2">
+                    <button 
+                        onClick={() => setLang(lang === 'it' ? 'en' : 'it')}
+                        className="flex items-center gap-2 text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-widest hover:text-indigo-500 transition-colors"
+                    >
+                        <Languages className="w-4 h-4" />
+                        {lang === 'it' ? 'English' : 'Italiano'}
+                    </button>
+                    
+                     <button 
+                        onClick={() => scrollTo('contact')}
+                        className="px-6 py-3 bg-slate-900 dark:bg-slate-100 text-white dark:text-slate-950 font-bold uppercase tracking-widest text-xs rounded-lg shadow-lg"
+                        >
+                        {ctaLabel}
+                    </button>
+                </div>
             </div>
-
-            <button 
-              onClick={() => scrollTo('contact')}
-              className="w-full py-4 bg-slate-900 dark:bg-slate-100 text-white dark:text-slate-950 font-bold uppercase tracking-widest mt-2"
-            >
-              {ctaLabel}
-            </button>
+            
+            {/* Click outside closer overlay */}
+            <div 
+                className="fixed inset-0 -z-10 bg-black/20 backdrop-blur-[2px]" 
+                style={{ top: '80px' }}
+                onClick={() => setIsMobileMenuOpen(false)}
+            />
           </div>
         )}
       </nav>
