@@ -1,5 +1,10 @@
 import React, { useState } from 'react';
 import { X, ZoomIn } from 'lucide-react';
+import { Language } from '../types';
+
+interface PortfolioProps {
+  lang: Language;
+}
 
 interface Work {
     url: string;
@@ -8,8 +13,23 @@ interface Work {
     year: string;
 }
 
-const Portfolio: React.FC = () => {
+const Portfolio: React.FC<PortfolioProps> = ({ lang }) => {
   const [selectedImage, setSelectedImage] = useState<Work | null>(null);
+
+  const content = {
+    it: {
+      subtitle: "Lavori Selezionati",
+      title: "Archivio Visivo",
+      btnViewAll: "Vedi Archivio Completo"
+    },
+    en: {
+      subtitle: "Selected Works",
+      title: "A Visual Archive",
+      btnViewAll: "View Complete Archive"
+    }
+  };
+
+  const t = content[lang];
 
   const works: Work[] = [
     {
@@ -54,8 +74,8 @@ const Portfolio: React.FC = () => {
     <section id="portfolio" className="py-20 md:py-32 bg-slate-950 border-t border-slate-900/50">
       <div className="max-w-7xl mx-auto px-6">
         <div className="mb-12 md:mb-24 text-center">
-          <span className="text-indigo-400/80 font-semibold tracking-[0.2em] uppercase text-xs">Selected Works</span>
-          <h2 className="text-3xl md:text-5xl text-white mt-4 font-serif">A Visual Archive</h2>
+          <span className="text-indigo-400/80 font-semibold tracking-[0.2em] uppercase text-xs">{t.subtitle}</span>
+          <h2 className="text-3xl md:text-5xl text-white mt-4 font-serif">{t.title}</h2>
         </div>
 
         {/* 
@@ -92,7 +112,7 @@ const Portfolio: React.FC = () => {
         
         <div className="mt-12 md:mt-20 text-center">
              <button className="text-slate-400 text-xs font-bold uppercase tracking-[0.2em] hover:text-white transition-colors border-b border-transparent hover:border-white pb-1 cursor-pointer">
-                View Complete Archive
+                {t.btnViewAll}
              </button>
         </div>
       </div>

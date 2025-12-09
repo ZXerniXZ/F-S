@@ -1,7 +1,12 @@
 import React, { useRef, useState } from 'react';
 import { ArrowRight, Globe, Image, Zap } from 'lucide-react';
+import { Language } from '../types';
 
-const Services: React.FC = () => {
+interface ServicesProps {
+  lang: Language;
+}
+
+const Services: React.FC<ServicesProps> = ({ lang }) => {
   const divRef = useRef<HTMLDivElement>(null);
   const [position, setPosition] = useState({ x: 0, y: 0 });
   const [opacity, setOpacity] = useState(0);
@@ -23,25 +28,61 @@ const Services: React.FC = () => {
     setOpacity(0);
   };
 
-  const services = [
-    {
-      icon: <Zap className="w-8 h-8" />,
-      title: "Live Reportage",
-      subtitle: "Event Photography",
-      description: "Comprehensive coverage leveraging low-light mastery. We capture the VIP experience, the stage production, and the crowd energy with unobtrusive professionalism."
+  const translations = {
+    it: {
+      expertise: "La Nostra Esperienza",
+      title: "Servizi & Soluzioni",
+      description: "Pacchetti su misura pensati per gruppi nightlife, festival e event planner di lusso.",
+      services: [
+        {
+          title: "Reportage Live",
+          subtitle: "Fotografia Eventi",
+          description: "Copertura completa sfruttando la maestria in condizioni di scarsa illuminazione. Catturiamo l'esperienza VIP, la produzione scenica e l'energia della folla con professionalità discreta."
+        },
+        {
+          title: "Curatela Editoriale",
+          subtitle: "Post-Produzione",
+          description: "Velocità senza compromessi. Selezioniamo e coloriamo le immagini per abbinarle alla palette e al mood del tuo locale. Consegnate entro 24 ore per il massimo impatto social."
+        },
+        {
+          title: "Gallerie Digitali",
+          subtitle: "Esperienza Cliente",
+          description: "Eleva l'esperienza dei tuoi ospiti con un portale web dedicato e brandizzato per ogni evento. Niente link generici—solo una piattaforma elegante e condivisibile che riporta traffico a te."
+        }
+      ],
+      learnMore: "Scopri di più"
     },
-    {
-      icon: <Image className="w-8 h-8" />,
-      title: "Editorial Curation",
-      subtitle: "Post-Production",
-      description: "Speed without compromise. We hand-select and grade images to match your venue's color palette and mood. Delivered within 24 hours for maximum social impact."
-    },
-    {
-      icon: <Globe className="w-8 h-8" />,
-      title: "Digital Galleries",
-      subtitle: "Client Experience",
-      description: "Elevate your guest experience with a dedicated, branded web portal for every event. No generic drive links—just a sleek, shareable platform that drives traffic back to you."
+    en: {
+      expertise: "Our Expertise",
+      title: "Services & Solutions",
+      description: "Tailored packages designed for nightlife groups, festivals, and luxury event planners.",
+      services: [
+        {
+          title: "Live Reportage",
+          subtitle: "Event Photography",
+          description: "Comprehensive coverage leveraging low-light mastery. We capture the VIP experience, the stage production, and the crowd energy with unobtrusive professionalism."
+        },
+        {
+          title: "Editorial Curation",
+          subtitle: "Post-Production",
+          description: "Speed without compromise. We hand-select and grade images to match your venue's color palette and mood. Delivered within 24 hours for maximum social impact."
+        },
+        {
+          title: "Digital Galleries",
+          subtitle: "Client Experience",
+          description: "Elevate your guest experience with a dedicated, branded web portal for every event. No generic drive links—just a sleek, shareable platform that drives traffic back to you."
+        }
+      ],
+      learnMore: "Learn More"
     }
+  };
+
+  const t = translations[lang];
+
+  const services = [
+    { icon: <Zap className="w-8 h-8" />, ...t.services[0] },
+    { icon: <Image className="w-8 h-8" />, ...t.services[1] },
+    { icon: <Globe className="w-8 h-8" />, ...t.services[2] }
   ];
 
   return (
@@ -49,11 +90,11 @@ const Services: React.FC = () => {
       <div className="max-w-7xl mx-auto px-6">
         <div className="flex flex-col md:flex-row justify-between items-end mb-12 md:mb-20 gap-4 md:gap-8">
           <div>
-            <span className="text-indigo-400/80 font-semibold tracking-[0.2em] uppercase text-xs">Our Expertise</span>
-            <h2 className="text-3xl md:text-5xl text-white mt-4 font-serif italic">Services & Solutions</h2>
+            <span className="text-indigo-400/80 font-semibold tracking-[0.2em] uppercase text-xs">{t.expertise}</span>
+            <h2 className="text-3xl md:text-5xl text-white mt-4 font-serif italic">{t.title}</h2>
           </div>
           <p className="text-slate-400 max-w-sm text-sm leading-relaxed">
-            Tailored packages designed for nightlife groups, festivals, and luxury event planners.
+            {t.description}
           </p>
         </div>
 
@@ -95,7 +136,7 @@ const Services: React.FC = () => {
               
               <div className="md:absolute md:bottom-12 md:left-12 md:opacity-0 md:group-hover:opacity-100 transition-all duration-500 transform md:translate-y-4 md:group-hover:translate-y-0 relative z-20">
                 <span className="inline-flex items-center text-xs font-bold text-white uppercase tracking-widest cursor-pointer">
-                  Learn More <ArrowRight className="w-3 h-3 ml-2" />
+                  {t.learnMore} <ArrowRight className="w-3 h-3 ml-2" />
                 </span>
               </div>
             </div>

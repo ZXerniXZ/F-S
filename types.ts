@@ -16,3 +16,5 @@ export interface PortfolioItem {
 export interface ImageGenerationConfig {
   aspectRatio: "1:1" | "3:4" | "4:3" | "9:16" | "16:9";
 }
+
+export type Language = 'it' | 'en';

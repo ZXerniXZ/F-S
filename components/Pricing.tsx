@@ -1,264 +1,431 @@
-import React, { useState, useRef, useEffect } from 'react';
-import { Check, Sparkles, Send, Bot, Terminal } from 'lucide-react';
-import { streamChat } from '../services/geminiService';
+import React, { useState, useEffect, useRef } from 'react';
+import { Check, Info, Zap, Globe, Clock, Camera, AlertTriangle, Download, ArrowRight, ChevronUp, ChevronDown } from 'lucide-react';
+import { Language } from '../types';
 
-const pricingData = [
-  {
-    name: "Basic",
-    price: "€150",
-    description: "Essential coverage for intimate events.",
-    features: [
-      "1 Photographer",
-      "Up to 2 hours coverage",
-      "Selection of 30 best photos",
-      "Basic post-editing (color, light)",
-      "Simple public online mini-album",
-      "Delivery: 7-10 days"
-    ],
-    highlight: false
+interface PricingProps {
+  lang: Language;
+}
+
+// --- BUSINESS LOGIC & RATES ---
+const RATES = {
+  photographerHourly: 50, // € per hour
+  minHours: 2,
+  baseIncludedPhotos: 150, 
+  extraPhotoCost: 2, // € per extra photo
+  webAlbum: {
+    basic: 0,   
+    private: 30, 
+    premium: 90  
   },
-  {
-    name: "Standard",
-    price: "€200 - €240",
-    description: "The balanced choice. Best value.",
-    features: [
-      "2 Photographers",
-      "Full night coverage (3-4 hours)",
-      "Selection of 40-60 best photos",
-      "Full premium post-editing",
-      "Private password-protected site",
-      "HD Downloads for guests",
-      "6 months hosting included",
-      "Delivery: 5-7 days"
-    ],
-    highlight: true
-  },
-  {
-    name: "Premium",
-    price: "€320 - €380",
-    description: "The ultimate brand experience.",
-    features: [
-      "2 Pro Photographers",
-      "Extended coverage (up to 5 hours)",
-      "Top 100 photos selection",
-      "Advanced retouching (skin, objects)",
-      "Custom branded premium website",
-      "One-click full album download",
-      "10 'Social-Ready' fast edits",
-      "12 months hosting included",
-      "Delivery: 3-5 days"
-    ],
-    highlight: false
+  rushFeePercentage: 0.15, 
+  travel: {
+    local: 0,    // Bergamo
+    region: 40,  // Lombardia
+    national: 120 // Italia
   }
-];
+};
 
-const SYSTEM_INSTRUCTION = `
-You are the AI Concierge for "Federico & Simone Photography". 
-Your goal is to help potential clients choose the best photography package for their event.
-Be professional, concise, and have a "cool/nightlife" vibe.
+type AlbumType = 'basic' | 'private' | 'premium';
+type TravelZone = 'local' | 'region' | 'national';
 
-Here are the packages:
-1. BASIC (€150): 1 photographer, 2 hours, 30 photos, basic edit, 7-10 days delivery. Good for small parties or low budget.
-2. STANDARD (€200-240): 2 photographers, 3-4 hours, 40-60 photos, full edit, private site with password, 5-7 days delivery. Best value, highly recommended.
-3. PREMIUM (€320-380): 2 photographers, 5 hours, 100 photos, advanced retouching, custom branded site, 10 social-ready pics, 3-5 days delivery. VIP experience.
+const TRANSLATIONS = {
+  it: {
+    badge: "Preventivo Su Misura",
+    title: "Costruisci la tua Esperienza",
+    subtitle: "Configura il pacchetto ideale. Prezzo in tempo reale.",
+    coverageTitle: "Staff & Durata",
+    photographers: "Fotografi",
+    photographersDesc1: "< 100 ospiti",
+    photographersDesc2: "> 100 ospiti",
+    duration: "Durata",
+    hours: "Ore",
+    minHours: "Min. 2 ore",
+    visualTitle: "Foto & Edit",
+    photosLabel: "Quantità Foto",
+    photosCount: "Foto",
+    photosNoteIncluded: "150 incluse",
+    photosNoteExtra: "+€2/extra",
+    digitalTitle: "Web Album",
+    albumBasic: "Basic",
+    albumBasicPrice: "Incluso",
+    albumBasicDesc: "Link pubblico, no password.",
+    albumPrivate: "Privato",
+    albumPrivateDesc: "Password, no watermark.",
+    albumPremium: "Premium",
+    albumPremiumDesc: "Brandizzato + Download Social.",
+    rushTitle: "Express 48h",
+    rushDesc: "+15% sul totale",
+    travelTitle: "Trasferta",
+    travelLocal: "Bergamo (Gratis)",
+    travelRegion: "Lombardia (€40)",
+    travelNational: "Italia (€120)",
+    summaryTitle: "Stima Preventivo",
+    summaryShooting: "Shooting",
+    summaryExtraPhotos: "Foto Extra",
+    summaryAlbum: "Album Web",
+    summaryTravel: "Trasferta",
+    summaryRush: "Supplemento Express",
+    totalEstimate: "Totale Stimato",
+    vatNote: "Incl. tasse. Acconto 30%",
+    btnBook: "Prenota",
+    btnPdf: "Scarica PDF",
+    disclaimerTitle: "Nota Importante",
+    disclaimerText: "Prezzo indicativo. Conferma finale previa verifica disponibilità.",
+    showDetails: "Vedi Dettagli",
+    hideDetails: "Nascondi Dettagli",
+    units: "unità"
+  },
+  en: {
+    badge: "Custom Quote",
+    title: "Build Your Experience",
+    subtitle: "Configure your ideal package. Real-time pricing.",
+    coverageTitle: "Staff & Time",
+    photographers: "Photographers",
+    photographersDesc1: "< 100 guests",
+    photographersDesc2: "> 100 guests",
+    duration: "Duration",
+    hours: "Hours",
+    minHours: "Min. 2 hours",
+    visualTitle: "Photos & Edit",
+    photosLabel: "Photo Count",
+    photosCount: "Photos",
+    photosNoteIncluded: "150 included",
+    photosNoteExtra: "+€2/extra",
+    digitalTitle: "Web Album",
+    albumBasic: "Basic",
+    albumBasicPrice: "Included",
+    albumBasicDesc: "Public link, no password.",
+    albumPrivate: "Private",
+    albumPrivateDesc: "Password, no watermark.",
+    albumPremium: "Premium",
+    albumPremiumDesc: "Branded + Social Download.",
+    rushTitle: "Express 48h",
+    rushDesc: "+15% on total",
+    travelTitle: "Travel Zone",
+    travelLocal: "Bergamo (Free)",
+    travelRegion: "Lombardy (€40)",
+    travelNational: "Italy (€120)",
+    summaryTitle: "Estimated Quote",
+    summaryShooting: "Shooting",
+    summaryExtraPhotos: "Extra Photos",
+    summaryAlbum: "Web Album",
+    summaryTravel: "Travel",
+    summaryRush: "Rush Fee",
+    totalEstimate: "Total Estimate",
+    vatNote: "Incl. taxes. Deposit 30%",
+    btnBook: "Book Now",
+    btnPdf: "Download PDF",
+    disclaimerTitle: "Important Note",
+    disclaimerText: "Indicative price. Final confirmation subject to availability check.",
+    showDetails: "Show Details",
+    hideDetails: "Hide Details",
+    units: "units"
+  }
+};
 
-Ask the user about:
-- Type of event?
-- Duration?
-- Do they need a private website?
-- Budget sensitivity?
+const Pricing: React.FC<PricingProps> = ({ lang }) => {
+  // --- STATE ---
+  const [photographers, setPhotographers] = useState(1);
+  const [hours, setHours] = useState(3);
+  const [photoCount, setPhotoCount] = useState(150);
+  const [albumType, setAlbumType] = useState<AlbumType>('basic');
+  const [isRush, setIsRush] = useState(false);
+  const [travelZone, setTravelZone] = useState<TravelZone>('local');
+  const [total, setTotal] = useState(0);
+  const [breakdown, setBreakdown] = useState<any>({});
+  
+  // Mobile UI State
+  const [showMobileDetails, setShowMobileDetails] = useState(false);
+  const [isSectionVisible, setIsSectionVisible] = useState(false);
+  const sectionRef = useRef<HTMLElement>(null);
 
-Then recommend the best package. Keep responses short (under 50 words unless explaining details).
-`;
+  const t = TRANSLATIONS[lang];
 
-const Pricing: React.FC = () => {
-  const [messages, setMessages] = useState<{role: string, text: string}[]>([
-    { role: "model", text: "Hi! Not sure which package fits your vibe? Tell me about your event and I'll recommend the perfect setup." }
-  ]);
-  const [input, setInput] = useState("");
-  const [loading, setLoading] = useState(false);
-  const scrollRef = useRef<HTMLDivElement>(null);
-
+  // --- INTERSECTION OBSERVER ---
   useEffect(() => {
-    if (scrollRef.current) {
-      scrollRef.current.scrollTop = scrollRef.current.scrollHeight;
+    const observer = new IntersectionObserver(
+      ([entry]) => {
+        setIsSectionVisible(entry.isIntersecting);
+      },
+      {
+        root: null,
+        threshold: 0, // Trigger as soon as any part is visible
+        rootMargin: "-20px" // Slight offset to ensure smoother transition
+      }
+    );
+
+    if (sectionRef.current) {
+      observer.observe(sectionRef.current);
     }
-  }, [messages]);
 
-  const handleSend = async () => {
-    if (!input.trim() || loading) return;
+    return () => {
+      if (sectionRef.current) {
+        observer.unobserve(sectionRef.current);
+      }
+    };
+  }, []);
 
-    const userMsg = input;
-    setInput("");
-    setMessages(prev => [...prev, { role: "user", text: userMsg }]);
-    setLoading(true);
+  // --- CALCULATION ENGINE ---
+  useEffect(() => {
+    const personnelCost = photographers * hours * RATES.photographerHourly;
+    const extraPhotos = Math.max(0, photoCount - RATES.baseIncludedPhotos);
+    const assetsCost = extraPhotos * RATES.extraPhotoCost;
+    const platformCost = RATES.webAlbum[albumType];
+    const logisticsCost = RATES.travel[travelZone];
+    let subtotal = personnelCost + assetsCost + platformCost + logisticsCost;
+    const rushFee = isRush ? subtotal * RATES.rushFeePercentage : 0;
+    const finalTotal = subtotal + rushFee;
 
-    try {
-      // Convert UI messages to API history format
-      const history = messages.map(m => ({
-        role: m.role,
-        parts: [{ text: m.text }]
-      }));
+    setTotal(finalTotal);
+    setBreakdown({ personnelCost, assetsCost, platformCost, logisticsCost, rushFee, subtotal });
+  }, [photographers, hours, photoCount, albumType, isRush, travelZone]);
 
-      let fullResponse = "";
-      
-      await streamChat(
-        history, 
-        userMsg, 
-        (chunk) => {
-          fullResponse += chunk;
-          setMessages(prev => {
-            const newArr = [...prev];
-            // If the last message is model, update it, otherwise add new
-            if (newArr[newArr.length - 1].role === "model" && newArr[newArr.length - 1].text !== history[history.length - 1]?.parts[0]?.text) {
-               newArr[newArr.length - 1].text = fullResponse;
-               return newArr;
-            } else {
-               return [...newArr, { role: "model", text: fullResponse }];
-            }
-          });
-        },
-        SYSTEM_INSTRUCTION
-      );
-    } catch (e) {
-      console.error(e);
-      setMessages(prev => [...prev, { role: "model", text: "Network glitch. Try again?" }]);
-    } finally {
-      setLoading(false);
-    }
+  const formatCurrency = (amount: number) => {
+    return new Intl.NumberFormat(lang === 'it' ? 'it-IT' : 'en-US', { style: 'currency', currency: 'EUR', maximumFractionDigits: 0 }).format(amount);
   };
 
+  // --- RENDER HELPERS ---
+  const BreakdownItem = ({ label, value, highlight = false }: { label: string, value: string, highlight?: boolean }) => (
+    <div className={`flex justify-between text-xs md:text-sm ${highlight ? 'text-indigo-300' : 'text-slate-400'}`}>
+      <span>{label}</span>
+      <span className="text-slate-200">{value}</span>
+    </div>
+  );
+
   return (
-    <section id="pricing" className="py-20 md:py-32 bg-slate-950 border-t border-slate-900/50 relative">
-      <div className="max-w-7xl mx-auto px-6">
-        <div className="text-center mb-16 md:mb-24">
-          <span className="text-indigo-400/80 font-semibold tracking-[0.2em] uppercase text-xs">Investment</span>
-          <h2 className="text-3xl md:text-5xl text-white mt-4 font-serif">Select Your Coverage</h2>
+    <section ref={sectionRef} id="pricing" className="py-20 md:py-32 bg-slate-950 border-t border-slate-900/50 relative pb-32 md:pb-32">
+      <div className="max-w-7xl mx-auto px-4 md:px-6">
+        
+        {/* HEADER */}
+        <div className="text-center mb-10 md:mb-16">
+          <span className="text-indigo-400/80 font-semibold tracking-[0.2em] uppercase text-[10px] md:text-xs">{t.badge}</span>
+          <h2 className="text-3xl md:text-5xl text-white mt-3 font-serif leading-tight">{t.title}</h2>
+          <p className="text-slate-400 mt-3 font-light text-sm md:text-base max-w-xl mx-auto hidden md:block">
+            {t.subtitle}
+          </p>
         </div>
 
-        {/* Pricing Cards */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 md:gap-8 mb-20">
-          {pricingData.map((pkg, idx) => (
-            <div 
-              key={idx} 
-              className={`relative flex flex-col p-8 md:p-10 rounded-sm transition-all duration-300 group
-                ${pkg.highlight 
-                  ? 'bg-slate-900 border border-indigo-500/30 shadow-[0_0_30px_rgba(99,102,241,0.1)]' 
-                  : 'bg-slate-950 border border-slate-800 hover:border-slate-700'
-                }
-              `}
-            >
-              {pkg.highlight && (
-                <div className="absolute top-0 right-0 bg-indigo-600 text-white text-[10px] font-bold px-3 py-1 uppercase tracking-widest translate-x-2 -translate-y-2">
-                  Best Value
-                </div>
-              )}
-              
-              <h3 className="text-xl font-serif text-white mb-2">{pkg.name}</h3>
-              <div className="text-2xl md:text-3xl font-light text-indigo-400 mb-4">{pkg.price}</div>
-              <p className="text-slate-500 text-sm mb-8 font-light min-h-[40px]">{pkg.description}</p>
-              
-              <ul className="space-y-4 mb-10 flex-grow">
-                {pkg.features.map((feat, i) => (
-                  <li key={i} className="flex items-start gap-3 text-sm text-slate-300">
-                    <Check className="w-4 h-4 text-indigo-500 mt-0.5 shrink-0" />
-                    <span className="font-light">{feat}</span>
-                  </li>
-                ))}
-              </ul>
-
-              <button className={`w-full py-3 text-xs font-bold uppercase tracking-widest transition-colors
-                ${pkg.highlight 
-                  ? 'bg-indigo-600 hover:bg-indigo-500 text-white' 
-                  : 'bg-slate-800 hover:bg-slate-700 text-slate-300'
-                }
-              `}>
-                Choose {pkg.name}
-              </button>
-            </div>
-          ))}
-        </div>
-
-        {/* AI Concierge Section */}
-        <div className="max-w-4xl mx-auto mt-12">
-            <div className="flex items-center gap-3 mb-4 opacity-70">
-                <Sparkles className="w-4 h-4 text-indigo-400" />
-                <span className="text-xs font-bold uppercase tracking-widest text-slate-400">AI Concierge</span>
-            </div>
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 md:gap-12 items-start">
+          
+          {/* CONTROLS (Left Col) */}
+          <div className="lg:col-span-8 space-y-4 md:space-y-6">
             
-            <div className="bg-slate-900/50 border border-slate-800 rounded-sm overflow-hidden flex flex-col md:flex-row">
-                {/* Visual Side (Hidden on small mobile) */}
-                <div className="hidden md:flex w-1/3 bg-slate-900 p-8 flex-col justify-between border-r border-slate-800">
-                    <div>
-                        <Bot className="w-8 h-8 text-slate-400 mb-4" />
-                        <h4 className="text-white font-serif text-lg mb-2">Need advice?</h4>
-                        <p className="text-slate-500 text-sm leading-relaxed">
-                            Our digital assistant knows every detail of our packages. Tell us about your event duration and needs.
+            {/* 1. COVERAGE (Condensed Mobile) */}
+            <div className="bg-slate-900/20 p-5 md:p-8 rounded-sm border border-slate-800">
+              <div className="flex items-center gap-2 mb-6">
+                <Clock className="text-indigo-400 w-4 h-4 md:w-5 md:h-5" />
+                <h3 className="text-base md:text-lg font-serif text-white">{t.coverageTitle}</h3>
+              </div>
+              
+              <div className="grid grid-cols-2 gap-4 md:gap-10">
+                {/* Photographers */}
+                <div>
+                  <div className="flex justify-between text-xs md:text-sm mb-3">
+                    <label className="text-slate-300 font-medium">{t.photographers}</label>
+                    <span className="text-indigo-400 font-bold">{photographers}</span>
+                  </div>
+                  <input 
+                    type="range" min="1" max="3" step="1"
+                    value={photographers}
+                    onChange={(e) => setPhotographers(parseInt(e.target.value))}
+                    className="w-full h-1.5 md:h-2 bg-slate-800 rounded-lg appearance-none cursor-pointer accent-indigo-500"
+                  />
+                  <p className="text-[10px] text-slate-500 mt-2">
+                    {photographers === 1 ? t.photographersDesc1 : t.photographersDesc2}
+                  </p>
+                </div>
+
+                {/* Hours */}
+                <div>
+                  <div className="flex justify-between text-xs md:text-sm mb-3">
+                    <label className="text-slate-300 font-medium">{t.duration}</label>
+                    <span className="text-indigo-400 font-bold">{hours}h</span>
+                  </div>
+                  <input 
+                    type="range" min="2" max="10" step="1"
+                    value={hours}
+                    onChange={(e) => setHours(parseInt(e.target.value))}
+                    className="w-full h-1.5 md:h-2 bg-slate-800 rounded-lg appearance-none cursor-pointer accent-indigo-500"
+                  />
+                  <p className="text-[10px] text-slate-500 mt-2">{t.minHours}</p>
+                </div>
+              </div>
+            </div>
+
+            {/* 2. ASSETS */}
+            <div className="bg-slate-900/20 p-5 md:p-8 rounded-sm border border-slate-800">
+              <div className="flex items-center gap-2 mb-6">
+                <Camera className="text-indigo-400 w-4 h-4 md:w-5 md:h-5" />
+                <h3 className="text-base md:text-lg font-serif text-white">{t.visualTitle}</h3>
+              </div>
+              <div>
+                <div className="flex justify-between text-xs md:text-sm mb-3">
+                  <label className="text-slate-300 font-medium">{t.photosLabel}</label>
+                  <span className="text-indigo-400 font-bold">{photoCount}</span>
+                </div>
+                <input 
+                  type="range" min="150" max="500" step="10"
+                  value={photoCount}
+                  onChange={(e) => setPhotoCount(parseInt(e.target.value))}
+                  className="w-full h-1.5 md:h-2 bg-slate-800 rounded-lg appearance-none cursor-pointer accent-indigo-500"
+                />
+                <div className="flex justify-between mt-2 text-[10px] md:text-xs text-slate-500">
+                  <span>{t.photosNoteIncluded}</span>
+                  <span>{t.photosNoteExtra}</span>
+                </div>
+              </div>
+            </div>
+
+            {/* 3. DIGITAL (Compact Grid) */}
+            <div className="bg-slate-900/20 p-5 md:p-8 rounded-sm border border-slate-800">
+              <div className="flex items-center gap-2 mb-6">
+                <Globe className="text-indigo-400 w-4 h-4 md:w-5 md:h-5" />
+                <h3 className="text-base md:text-lg font-serif text-white">{t.digitalTitle}</h3>
+              </div>
+
+              <div className="flex flex-col md:grid md:grid-cols-3 gap-3">
+                {[
+                    { type: 'basic', label: t.albumBasic, price: t.albumBasicPrice, desc: t.albumBasicDesc },
+                    { type: 'private', label: t.albumPrivate, price: `€${RATES.webAlbum.private}`, desc: t.albumPrivateDesc },
+                    { type: 'premium', label: t.albumPremium, price: `€${RATES.webAlbum.premium}`, desc: t.albumPremiumDesc }
+                ].map((option) => (
+                    <div 
+                        key={option.type}
+                        onClick={() => setAlbumType(option.type as AlbumType)}
+                        className={`cursor-pointer p-3 md:p-4 border rounded-sm transition-all relative
+                            ${albumType === option.type ? 'bg-indigo-900/20 border-indigo-500 shadow-[0_0_10px_rgba(99,102,241,0.15)]' : 'bg-slate-950/50 border-slate-800'}
+                        `}
+                    >
+                        <div className="flex justify-between items-center md:items-start md:flex-col md:mb-2">
+                            <span className={`text-xs md:text-sm font-bold uppercase tracking-wider ${albumType === option.type ? 'text-indigo-400' : 'text-slate-400'}`}>
+                                {option.label}
+                            </span>
+                            <span className="text-sm md:text-lg font-light text-white md:mt-1">{option.price}</span>
+                        </div>
+                        {/* Description - Hidden on mobile unless selected for space */}
+                        <p className={`text-[10px] md:text-xs text-slate-500 leading-tight mt-1 md:mt-0 ${albumType === option.type ? 'block' : 'hidden md:block'}`}>
+                            {option.desc}
                         </p>
                     </div>
-                    <div className="text-[10px] text-slate-600 font-mono">
-                        System: Online<br/>
-                        Latency: 12ms
-                    </div>
-                </div>
-
-                {/* Chat Interface */}
-                <div className="flex-1 flex flex-col h-[400px]">
-                    {/* Message Area */}
-                    <div 
-                        ref={scrollRef}
-                        className="flex-1 p-6 overflow-y-auto space-y-4 scrollbar-hide"
-                    >
-                        {messages.map((msg, i) => (
-                            <div key={i} className={`flex ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}>
-                                <div className={`max-w-[85%] p-4 text-sm font-light leading-relaxed rounded-sm 
-                                    ${msg.role === 'user' 
-                                        ? 'bg-indigo-600/20 text-indigo-100 border border-indigo-500/20' 
-                                        : 'bg-slate-800/50 text-slate-300 border border-slate-700/50'
-                                    }`}>
-                                    {msg.role === 'model' && <Terminal className="w-3 h-3 text-indigo-400 mb-2 inline-block mr-2" />}
-                                    {msg.text}
-                                </div>
-                            </div>
-                        ))}
-                        {loading && (
-                            <div className="flex justify-start">
-                                <div className="bg-slate-800/50 p-4 rounded-sm">
-                                    <div className="flex gap-1">
-                                        <div className="w-1.5 h-1.5 bg-indigo-500 rounded-full animate-bounce" style={{animationDelay: '0ms'}}></div>
-                                        <div className="w-1.5 h-1.5 bg-indigo-500 rounded-full animate-bounce" style={{animationDelay: '150ms'}}></div>
-                                        <div className="w-1.5 h-1.5 bg-indigo-500 rounded-full animate-bounce" style={{animationDelay: '300ms'}}></div>
-                                    </div>
-                                </div>
-                            </div>
-                        )}
-                    </div>
-
-                    {/* Input Area */}
-                    <div className="p-4 bg-slate-900 border-t border-slate-800">
-                        <form 
-                            className="flex gap-2"
-                            onSubmit={(e) => { e.preventDefault(); handleSend(); }}
-                        >
-                            <input 
-                                type="text" 
-                                value={input}
-                                onChange={(e) => setInput(e.target.value)}
-                                placeholder="Example: It's a birthday party, about 4 hours long..."
-                                className="flex-1 bg-slate-950 border border-slate-800 text-slate-200 px-4 py-3 text-sm focus:border-indigo-500 focus:outline-none transition-colors"
-                            />
-                            <button 
-                                type="submit"
-                                disabled={loading}
-                                className="bg-white text-slate-950 px-4 flex items-center justify-center hover:bg-indigo-50 disabled:opacity-50 transition-colors"
-                            >
-                                <Send className="w-4 h-4" />
-                            </button>
-                        </form>
-                    </div>
-                </div>
+                ))}
+              </div>
             </div>
+
+            {/* 4. EXTRAS & TRAVEL */}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-6">
+               <div 
+                  onClick={() => setIsRush(!isRush)}
+                  className={`cursor-pointer flex items-center justify-between p-4 md:p-6 rounded-sm border transition-all ${isRush ? 'bg-indigo-900/20 border-indigo-500' : 'bg-slate-900/20 border-slate-800'}`}
+                >
+                  <div className="flex items-center gap-3">
+                    <Zap className={`w-4 h-4 md:w-5 md:h-5 ${isRush ? 'text-indigo-400' : 'text-slate-600'}`} />
+                    <div>
+                      <h4 className="text-xs md:text-sm font-bold text-white uppercase tracking-wider">{t.rushTitle}</h4>
+                      <p className="text-[10px] md:text-xs text-slate-500">{t.rushDesc}</p>
+                    </div>
+                  </div>
+                  <div className={`w-4 h-4 rounded-full border flex items-center justify-center ${isRush ? 'border-indigo-500 bg-indigo-500' : 'border-slate-600'}`}>
+                    {isRush && <Check className="w-3 h-3 text-white" />}
+                  </div>
+               </div>
+
+               <div className="bg-slate-900/20 p-4 md:p-6 rounded-sm border border-slate-800">
+                  <div className="flex items-center gap-2 mb-2 md:mb-4">
+                    <h4 className="text-xs md:text-sm font-bold text-white uppercase tracking-wider">{t.travelTitle}</h4>
+                  </div>
+                  <select 
+                    value={travelZone}
+                    onChange={(e) => setTravelZone(e.target.value as TravelZone)}
+                    className="w-full bg-slate-950 border border-slate-700 text-slate-300 text-xs md:text-sm p-2 rounded-sm outline-none focus:border-indigo-500"
+                  >
+                    <option value="local">{t.travelLocal}</option>
+                    <option value="region">{t.travelRegion}</option>
+                    <option value="national">{t.travelNational}</option>
+                  </select>
+               </div>
+            </div>
+            
+            {/* MOBILE ONLY: Disclaimer inline */}
+            <div className="md:hidden mt-6 flex items-start gap-3 p-4 bg-red-950/10 rounded-sm border border-red-900/20">
+                <AlertTriangle className="w-4 h-4 text-red-400/80 mt-0.5 shrink-0" />
+                <p className="text-[10px] text-red-200/60 leading-relaxed">{t.disclaimerText}</p>
+            </div>
+
+          </div>
+
+          {/* RIGHT COLUMN: DESKTOP SUMMARY (Hidden on Mobile) */}
+          <div className="hidden lg:block lg:col-span-4 relative">
+            <div className="sticky top-24 bg-slate-900 border border-slate-800 rounded-sm p-8 shadow-2xl">
+              <h3 className="text-xl font-serif text-white mb-6 border-b border-slate-800 pb-4">{t.summaryTitle}</h3>
+              
+              <div className="space-y-4 mb-6">
+                <BreakdownItem label={`${t.summaryShooting} (${hours}h x ${photographers})`} value={formatCurrency(breakdown.personnelCost)} />
+                {breakdown.assetsCost > 0 && <BreakdownItem label={`${t.summaryExtraPhotos} (+${photoCount - RATES.baseIncludedPhotos})`} value={formatCurrency(breakdown.assetsCost)} />}
+                <BreakdownItem label={`${t.summaryAlbum} (${albumType})`} value={breakdown.platformCost === 0 ? 'Included' : formatCurrency(breakdown.platformCost)} />
+                {breakdown.logisticsCost > 0 && <BreakdownItem label={t.summaryTravel} value={formatCurrency(breakdown.logisticsCost)} />}
+                {isRush && <BreakdownItem label={t.summaryRush} value={formatCurrency(breakdown.rushFee)} highlight />}
+              </div>
+
+              <div className="border-t border-slate-800 pt-6 mb-8">
+                <div className="flex justify-between items-end">
+                  <span className="text-slate-400 text-sm font-medium uppercase tracking-widest">{t.totalEstimate}</span>
+                  <span className="text-4xl font-serif text-white">{formatCurrency(total)}</span>
+                </div>
+                <div className="text-right text-xs text-slate-600 mt-2">
+                  {t.vatNote} {formatCurrency(total * 0.30)}
+                </div>
+              </div>
+
+              <div className="space-y-3">
+                <button className="w-full py-4 bg-white text-slate-950 font-bold uppercase tracking-widest text-xs hover:bg-indigo-50 transition-colors flex items-center justify-center gap-2">
+                  {t.btnBook} <ArrowRight className="w-4 h-4" />
+                </button>
+                <button className="w-full py-4 border border-slate-700 text-slate-300 font-bold uppercase tracking-widest text-xs hover:border-white hover:text-white transition-colors flex items-center justify-center gap-2">
+                  <Download className="w-4 h-4" /> {t.btnPdf}
+                </button>
+              </div>
+              
+              <div className="mt-6 flex items-start gap-3 text-[10px] text-slate-500">
+                 <Info className="w-3 h-3 mt-0.5 shrink-0" />
+                 <p>{t.disclaimerText}</p>
+              </div>
+            </div>
+          </div>
+
         </div>
+      </div>
+
+      {/* MOBILE STICKY BOTTOM BAR */}
+      <div 
+        className={`fixed bottom-0 left-0 right-0 bg-slate-900 border-t border-slate-800 z-50 lg:hidden shadow-[0_-5px_20px_rgba(0,0,0,0.5)] transition-transform duration-500 ease-in-out ${isSectionVisible ? 'translate-y-0' : 'translate-y-full'}`}
+      >
+         {/* Dropdown Details */}
+         {showMobileDetails && (
+             <div className="bg-slate-900 p-6 border-b border-slate-800 animate-in slide-in-from-bottom-5">
+                 <div className="space-y-3 mb-4">
+                    <BreakdownItem label={`${t.summaryShooting} (${photographers}p, ${hours}h)`} value={formatCurrency(breakdown.personnelCost)} />
+                    {breakdown.assetsCost > 0 && <BreakdownItem label={t.summaryExtraPhotos} value={formatCurrency(breakdown.assetsCost)} />}
+                    <BreakdownItem label={`${t.summaryAlbum} (${albumType})`} value={breakdown.platformCost === 0 ? 'Incl.' : formatCurrency(breakdown.platformCost)} />
+                    {breakdown.logisticsCost > 0 && <BreakdownItem label={t.summaryTravel} value={formatCurrency(breakdown.logisticsCost)} />}
+                    {isRush && <BreakdownItem label={t.summaryRush} value={formatCurrency(breakdown.rushFee)} highlight />}
+                 </div>
+                 <div className="text-[10px] text-slate-500 text-center border-t border-slate-800 pt-3">
+                    {t.vatNote} {formatCurrency(total * 0.30)}
+                 </div>
+             </div>
+         )}
+         
+         <div className="p-4 flex items-center justify-between gap-4">
+            <div className="flex flex-col cursor-pointer" onClick={() => setShowMobileDetails(!showMobileDetails)}>
+                <span className="text-[10px] text-slate-400 uppercase tracking-widest flex items-center gap-1">
+                    {t.totalEstimate} {showMobileDetails ? <ChevronDown className="w-3 h-3"/> : <ChevronUp className="w-3 h-3"/>}
+                </span>
+                <span className="text-2xl font-serif text-white leading-none mt-1">{formatCurrency(total)}</span>
+            </div>
+            <button className="px-6 py-3 bg-white text-slate-950 font-bold uppercase tracking-widest text-xs rounded-sm shadow-lg active:scale-95 transition-transform">
+                {t.btnBook}
+            </button>
+         </div>
       </div>
     </section>
   );
