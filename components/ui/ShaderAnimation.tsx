@@ -23,7 +23,8 @@ export function ShaderAnimation({ imageUrl }: ShaderAnimationProps) {
     if (!containerRef.current) return
 
     const container = containerRef.current
-    const MAX_WAVES = 20;
+    const MAX_WAVES = 4;
+    const WAVE_LIFETIME = 4.0; // Seconds
 
     // Vertex shader
     const vertexShader = `
@@ -54,7 +55,7 @@ export function ShaderAnimation({ imageUrl }: ShaderAnimationProps) {
         
         vec3 lightColor = vec3(0.0);
         vec2 displacement = vec2(0.0);
-        float lineWidth = 0.002;
+        float lineWidth = 0.005; // Increased width for better visibility
         
         // --- WAVE CALCULATION LOOP ---
         for(int k=0; k < ${MAX_WAVES}; k++) {
@@ -64,7 +65,7 @@ export function ShaderAnimation({ imageUrl }: ShaderAnimationProps) {
             if (startTime < 0.0) continue;
 
             float elapsed = time - startTime;
-            if (elapsed < 0.0 || elapsed > 4.0) continue;
+            if (elapsed < 0.0 || elapsed > ${WAVE_LIFETIME.toFixed(1)}) continue;
 
             // Wave center in aspect-corrected space
             vec2 waveCenter = (wave.xy * 2.0 - resolution.xy) / min(resolution.x, resolution.y);
@@ -77,7 +78,7 @@ export function ShaderAnimation({ imageUrl }: ShaderAnimationProps) {
             float waveRadius = elapsed * speed;
             
             // Fading
-            float alpha = 1.0 - smoothstep(0.0, 4.0, elapsed);
+            float alpha = 1.0 - smoothstep(0.0, ${WAVE_LIFETIME.toFixed(1)}, elapsed);
             
             // --- DISTORTION LOGIC ---
             float distortionStrength = 0.05 * alpha; 
@@ -88,11 +89,12 @@ export function ShaderAnimation({ imageUrl }: ShaderAnimationProps) {
 
             // --- LIGHTING LOGIC ---
             vec3 waveLight = vec3(0.0);
-            for(int j = 0; j < 2; j++){ 
+            for(int j = 0; j < 3; j++){ 
               for(int i=0; i < 3; i++){
                 float wavePos = waveRadius - 0.02*float(j) + float(i)*0.01;
                 float ripple = abs(wavePos * 5.0 - dist * 5.0 + mod(aspectUV.x+aspectUV.y, 0.2));
-                waveLight[j] += lineWidth * float(i*i) / max(0.001, ripple);
+                // Increased multiplier from 2.0 to 6.0 for intense white glow
+                waveLight[j] += (lineWidth * 6.0) * float(i*i) / max(0.001, ripple);
               }
             }
             lightColor += waveLight * alpha;
@@ -151,8 +153,8 @@ export function ShaderAnimation({ imageUrl }: ShaderAnimationProps) {
     const scene = new THREE.Scene()
     const geometry = new THREE.PlaneGeometry(2, 2)
 
-    // Initialize waves array
-    const initialWaves = new Array(MAX_WAVES).fill(0).map(() => new THREE.Vector3(0, 0, -10.0));
+    // Initialize waves array with negative start time (inactive)
+    const initialWaves = new Array(MAX_WAVES).fill(0).map(() => new THREE.Vector3(0, 0, -100.0));
 
     // Load Texture if URL provided
     let texture: THREE.Texture | null = null;
@@ -227,11 +229,27 @@ export function ShaderAnimation({ imageUrl }: ShaderAnimationProps) {
         const physicalMouseX = cssMouseX * dpr;
         const physicalMouseY = cssMouseY * dpr;
         
-        const idx = sceneRef.current.currentWaveIndex;
         const waves = sceneRef.current.uniforms.uWaves.value;
+        const currentTime = sceneRef.current.uniforms.time.value;
         
-        waves[idx].set(physicalMouseX, physicalMouseY, sceneRef.current.uniforms.time.value);
-        sceneRef.current.currentWaveIndex = (idx + 1) % MAX_WAVES;
+        // Find the first available wave slot (finished or inactive)
+        let freeSlotIndex = -1;
+        
+        for(let i = 0; i < MAX_WAVES; i++) {
+            const w = waves[i];
+            const elapsed = currentTime - w.z;
+            
+            // Check if wave is inactive (negative start time) or finished (elapsed > lifetime)
+            if (w.z < 0 || elapsed > WAVE_LIFETIME) {
+                freeSlotIndex = i;
+                break; // Found one, stop searching
+            }
+        }
+
+        // Only generate wave if a slot is free
+        if (freeSlotIndex !== -1) {
+            waves[freeSlotIndex].set(physicalMouseX, physicalMouseY, currentTime);
+        }
     }
 
     const onClick = (e: MouseEvent) => handleInteraction(e.clientX, e.clientY);

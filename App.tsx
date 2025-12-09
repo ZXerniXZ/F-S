@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import Navbar from './components/Navbar';
 import Hero from './components/Hero';
 import Services from './components/Services';
@@ -10,6 +10,19 @@ import { Language } from './types';
 
 const App: React.FC = () => {
   const [lang, setLang] = useState<Language>('it');
+  const [isDarkMode, setIsDarkMode] = useState(true);
+
+  // Theme Toggle Logic
+  useEffect(() => {
+    const html = document.documentElement;
+    if (isDarkMode) {
+      html.classList.add('dark');
+    } else {
+      html.classList.remove('dark');
+    }
+  }, [isDarkMode]);
+
+  const toggleTheme = () => setIsDarkMode(!isDarkMode);
 
   const content = {
     it: {
@@ -29,23 +42,23 @@ const App: React.FC = () => {
   const t = content[lang];
 
   return (
-    <div className="bg-slate-950 min-h-screen text-slate-200 selection:bg-indigo-500/30 selection:text-indigo-200 cursor-none">
+    <div className="min-h-screen bg-slate-50 dark:bg-slate-950 text-slate-900 dark:text-slate-200 selection:bg-indigo-500/30 selection:text-indigo-600 dark:selection:text-indigo-200 cursor-none transition-colors duration-300">
       <CustomCursor />
-      <Navbar lang={lang} setLang={setLang} />
+      <Navbar lang={lang} setLang={setLang} isDarkMode={isDarkMode} toggleTheme={toggleTheme} />
       <Hero lang={lang} />
       
       {/* Refined About Section */}
-      <div id="about" className="py-20 md:py-32 px-6 bg-slate-950 relative">
+      <div id="about" className="py-20 md:py-32 px-6 bg-slate-100 dark:bg-slate-950 relative transition-colors duration-300">
         <div className="max-w-3xl mx-auto text-center">
-          <span className="text-indigo-400/80 font-semibold tracking-[0.2em] uppercase text-xs mb-6 block">{t.philosophyTitle}</span>
-          <h3 className="text-2xl md:text-4xl text-white mb-8 md:mb-10 leading-snug">
+          <span className="text-indigo-500 dark:text-indigo-400/80 font-semibold tracking-[0.2em] uppercase text-xs mb-6 block">{t.philosophyTitle}</span>
+          <h3 className="text-2xl md:text-4xl text-slate-900 dark:text-white mb-8 md:mb-10 leading-snug">
             {t.mainStatement}
           </h3>
-          <div className="w-full h-[1px] bg-gradient-to-r from-transparent via-slate-800 to-transparent mb-8 md:mb-10"></div>
-          <p className="text-base md:text-lg text-slate-400 leading-relaxed font-light mb-6">
+          <div className="w-full h-[1px] bg-gradient-to-r from-transparent via-slate-300 dark:via-slate-800 to-transparent mb-8 md:mb-10"></div>
+          <p className="text-base md:text-lg text-slate-600 dark:text-slate-400 leading-relaxed font-light mb-6">
             {t.p1}
           </p>
-          <p className="text-base md:text-lg text-slate-400 leading-relaxed font-light">
+          <p className="text-base md:text-lg text-slate-600 dark:text-slate-400 leading-relaxed font-light">
             {t.p2}
           </p>
         </div>
