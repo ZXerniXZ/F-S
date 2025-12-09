@@ -13,14 +13,15 @@ const getClient = () => {
 export const streamChat = async (
   history: { role: string; parts: { text: string }[] }[],
   newMessage: string,
-  onChunk: (text: string) => void
+  onChunk: (text: string) => void,
+  systemInstruction?: string
 ) => {
   const ai = getClient();
   const chat = ai.chats.create({
     model: 'gemini-2.5-flash',
     history: history,
     config: {
-      systemInstruction: "You are a helpful, creative, and intelligent AI assistant provided by GenAI Studio.",
+      systemInstruction: systemInstruction || "You are a helpful, creative, and intelligent AI assistant provided by GenAI Studio.",
     },
   });
 

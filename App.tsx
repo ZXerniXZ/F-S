@@ -3,6 +3,7 @@ import Navbar from './components/Navbar';
 import Hero from './components/Hero';
 import Services from './components/Services';
 import Portfolio from './components/Portfolio';
+import Pricing from './components/Pricing';
 import Contact from './components/Contact';
 import CustomCursor from './components/CustomCursor';
 
@@ -33,6 +34,7 @@ const App: React.FC = () => {
 
       <Services />
       <Portfolio />
+      <Pricing />
       <Contact />
     </div>
   );

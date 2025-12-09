@@ -36,7 +36,7 @@ const Navbar: React.FC = () => {
 
         {/* Desktop Menu */}
         <div className="hidden md:flex items-center gap-10">
-          {['Philosophy', 'Services', 'Portfolio'].map((item) => (
+          {['Philosophy', 'Services', 'Portfolio', 'Pricing'].map((item) => (
             <button 
               key={item}
               onClick={() => scrollTo(item.toLowerCase() === 'philosophy' ? 'about' : item.toLowerCase())}
@@ -62,7 +62,7 @@ const Navbar: React.FC = () => {
       {/* Mobile Menu */}
       {isMobileMenuOpen && (
         <div className="absolute top-full left-0 w-full bg-slate-950 border-b border-slate-800 p-8 flex flex-col gap-6 md:hidden animate-in slide-in-from-top-5">
-          {['Philosophy', 'Services', 'Portfolio', 'Contact'].map((item) => (
+          {['Philosophy', 'Services', 'Portfolio', 'Pricing', 'Contact'].map((item) => (
             <button 
               key={item}
               onClick={() => scrollTo(item.toLowerCase() === 'philosophy' ? 'about' : item.toLowerCase())}
