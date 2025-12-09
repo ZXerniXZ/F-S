@@ -177,7 +177,7 @@ export function ShaderAnimation() {
 
     window.addEventListener("click", onClick);
     window.addEventListener("touchstart", onTouch, { passive: true });
-    window.addEventListener("touchmove", onTouch, { passive: true });
+    // REMOVED: window.addEventListener("touchmove", onTouch, { passive: true });
 
     // Handle window resize
     const onWindowResize = () => {
@@ -235,7 +235,7 @@ export function ShaderAnimation() {
       window.removeEventListener("resize", onWindowResize)
       window.removeEventListener("click", onClick)
       window.removeEventListener("touchstart", onTouch)
-      window.removeEventListener("touchmove", onTouch)
+      // REMOVED: window.removeEventListener("touchmove", onTouch)
 
       if (sceneRef.current) {
         cancelAnimationFrame(sceneRef.current.animationId)
