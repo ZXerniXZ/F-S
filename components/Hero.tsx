@@ -1,3 +1,4 @@
+
 import React, { useEffect, useState } from 'react';
 import { ChevronDown } from 'lucide-react';
 import { Language } from '../types';
@@ -41,26 +42,35 @@ const Hero: React.FC<HeroProps> = ({ lang }) => {
   };
 
   const t = content[lang];
+  
+  // Helper for Google Drive Links
+  // Using lh3.googleusercontent.com is often more CORS friendly for WebGL textures than drive.google.com/uc
+  const getDriveLink = (id: string) => `https://lh3.googleusercontent.com/d/${id}`;
+  
+  // Using the specific Drive ID provided
+  const bgImage = getDriveLink("1Cj0Htsro1vSWYimabgq1KEdAYD9fKtqA");
 
   return (
     <section id="hero" className="relative h-screen w-full flex items-center justify-center overflow-hidden bg-slate-950">
-      {/* Parallax Background with Shader */}
+      {/* Parallax Background with Image & Shader */}
       <div 
         className="absolute inset-0 z-0 scale-110 transition-transform duration-100 ease-out"
         style={{
             transform: `translate3d(${-offset.x}px, ${-offset.y}px, 0) scale(1.1)`
         }}
       >
-        <div className="w-full h-full opacity-60">
-            <ShaderAnimation />
+        {/* Shader Layer contains the image now */}
+        <div className="absolute inset-0 z-10 w-full h-full">
+            <ShaderAnimation imageUrl={bgImage} />
         </div>
+
         {/* Gradient Overlay for text readability */}
-        <div className="absolute inset-0 bg-gradient-to-b from-slate-950/80 via-slate-950/40 to-slate-950" />
+        <div className="absolute inset-0 z-20 bg-gradient-to-b from-slate-950/60 via-slate-950/30 to-slate-950" />
       </div>
 
       {/* Floating Content */}
       <div 
-        className="relative z-10 text-center px-6 max-w-4xl mx-auto flex flex-col items-center transition-transform duration-200 ease-out"
+        className="relative z-30 text-center px-6 max-w-4xl mx-auto flex flex-col items-center transition-transform duration-200 ease-out"
         style={{
             transform: `translate3d(${offset.x * 0.5}px, ${offset.y * 0.5}px, 0)`
         }}
@@ -89,7 +99,7 @@ const Hero: React.FC<HeroProps> = ({ lang }) => {
         </div>
       </div>
 
-      <div className="absolute bottom-8 md:bottom-12 left-1/2 transform -translate-x-1/2 text-slate-600 animate-bounce">
+      <div className="absolute bottom-8 md:bottom-12 left-1/2 transform -translate-x-1/2 text-slate-600 animate-bounce z-30">
         <ChevronDown className="w-6 h-6 opacity-50" />
       </div>
     </section>

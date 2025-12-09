@@ -1,9 +1,14 @@
+
 "use client"
 
 import { useEffect, useRef } from "react"
 import * as THREE from "three"
 
-export function ShaderAnimation() {
+interface ShaderAnimationProps {
+    imageUrl?: string;
+}
+
+export function ShaderAnimation({ imageUrl }: ShaderAnimationProps) {
   const containerRef = useRef<HTMLDivElement>(null)
   const sceneRef = useRef<{
     camera: THREE.Camera
@@ -18,11 +23,13 @@ export function ShaderAnimation() {
     if (!containerRef.current) return
 
     const container = containerRef.current
-    const MAX_WAVES = 20; // Maximum number of concurrent shockwaves
+    const MAX_WAVES = 20;
 
     // Vertex shader
     const vertexShader = `
+      varying vec2 vUv;
       void main() {
+        vUv = uv;
         gl_Position = vec4( position, 1.0 );
       }
     `
@@ -30,62 +37,110 @@ export function ShaderAnimation() {
     // Fragment shader
     const fragmentShader = `
       precision highp float;
+      
+      varying vec2 vUv;
       uniform vec2 resolution;
+      uniform vec2 imageResolution; // New uniform for image dimensions
       uniform float time;
+      uniform sampler2D uTexture;
+      uniform bool uHasTexture;
+      
       // Array of waves: .x = x_pos, .y = y_pos, .z = start_time
       uniform vec3 uWaves[${MAX_WAVES}]; 
 
       void main(void) {
-        // Calculate coordinate system
-        vec2 uv = (gl_FragCoord.xy * 2.0 - resolution.xy) / min(resolution.x, resolution.y);
+        // Aspect corrected UVs for circle calculations (Physical screen space)
+        vec2 aspectUV = (gl_FragCoord.xy * 2.0 - resolution.xy) / min(resolution.x, resolution.y);
         
-        vec3 finalColor = vec3(0.0);
+        vec3 lightColor = vec3(0.0);
+        vec2 displacement = vec2(0.0);
         float lineWidth = 0.002;
         
-        // Iterate through all possible waves
+        // --- WAVE CALCULATION LOOP ---
         for(int k=0; k < ${MAX_WAVES}; k++) {
             vec3 wave = uWaves[k];
             float startTime = wave.z;
             
-            // If wave hasn't started (z < 0), skip
             if (startTime < 0.0) continue;
 
             float elapsed = time - startTime;
-
-            // If animation finished (after 4 seconds), skip to save processing visually
             if (elapsed < 0.0 || elapsed > 4.0) continue;
 
-            // Coordinate for this specific wave click
-            vec2 waveUV = (wave.xy * 2.0 - resolution.xy) / min(resolution.x, resolution.y);
+            // Wave center in aspect-corrected space
+            vec2 waveCenter = (wave.xy * 2.0 - resolution.xy) / min(resolution.x, resolution.y);
 
-            // Expansion logic
+            // Distance & Direction
+            float dist = distance(aspectUV, waveCenter);
+            vec2 dir = normalize(aspectUV - waveCenter);
+
             float speed = 0.8;
-            float expansion = elapsed * speed;
+            float waveRadius = elapsed * speed;
             
-            // Distance from click point
-            float dist = distance(uv, waveUV);
-            
-            // Fade out based on time
+            // Fading
             float alpha = 1.0 - smoothstep(0.0, 4.0, elapsed);
-
-            vec3 waveColor = vec3(0.0);
             
-            // Render loops for this wave
-            for(int j = 0; j < 3; j++){
-              for(int i=0; i < 5; i++){
-                float wavePos = expansion - 0.02*float(j) + float(i)*0.01;
-                float ripple = abs(wavePos * 5.0 - dist * 5.0 + mod(uv.x+uv.y, 0.2));
-                
-                // Accumulate color for this specific wave
-                waveColor[j] += lineWidth * float(i*i) / max(0.001, ripple); // avoid div by zero
+            // --- DISTORTION LOGIC ---
+            float distortionStrength = 0.05 * alpha; 
+            float distortionWidth = 0.15;
+            float waveImpulse = exp(-pow((dist - waveRadius) / distortionWidth, 2.0));
+            
+            displacement -= dir * waveImpulse * distortionStrength;
+
+            // --- LIGHTING LOGIC ---
+            vec3 waveLight = vec3(0.0);
+            for(int j = 0; j < 2; j++){ 
+              for(int i=0; i < 3; i++){
+                float wavePos = waveRadius - 0.02*float(j) + float(i)*0.01;
+                float ripple = abs(wavePos * 5.0 - dist * 5.0 + mod(aspectUV.x+aspectUV.y, 0.2));
+                waveLight[j] += lineWidth * float(i*i) / max(0.001, ripple);
               }
             }
+            lightColor += waveLight * alpha;
+        }
+
+        // --- FINAL COMPOSITION ---
+        vec4 finalOutput = vec4(0.0, 0.0, 0.0, 1.0);
+
+        if (uHasTexture) {
+            // --- ASPECT RATIO CORRECTION (COVER MODE) ---
+            float screenAspect = resolution.x / resolution.y;
+            float imageAspect = imageResolution.x / imageResolution.y;
             
-            // Add weighted by alpha
-            finalColor += waveColor * alpha;
+            vec2 newUv = vUv;
+            
+            if (screenAspect > imageAspect) {
+                // Screen is wider than image: Fit Width, Crop Height
+                // We map screen 0..1 to a subset of texture Y to zoom in
+                float scale = imageAspect / screenAspect;
+                newUv.y = (vUv.y - 0.5) * scale + 0.5;
+            } else {
+                // Screen is taller than image: Fit Height, Crop Width
+                // We map screen 0..1 to a subset of texture X to zoom in
+                float scale = screenAspect / imageAspect;
+                newUv.x = (vUv.x - 0.5) * scale + 0.5;
+            }
+
+            // Apply displacement to the corrected UVs
+            vec2 distortedUv = newUv + displacement;
+            
+            // Check boundaries (optional in cover mode, but keeps edges clean if wave pushes too far)
+            if (distortedUv.x < 0.0 || distortedUv.x > 1.0 || distortedUv.y < 0.0 || distortedUv.y > 1.0) {
+                 finalOutput = vec4(lightColor, 1.0);
+            } else {
+                vec4 texColor = texture2D(uTexture, distortedUv);
+                
+                // Grayscale
+                float grey = dot(texColor.rgb, vec3(0.299, 0.587, 0.114));
+                vec3 bgBase = vec3(grey); 
+                
+                // Add lights on top
+                finalOutput = vec4(bgBase + lightColor, 1.0);
+            }
+        } else {
+            finalOutput = vec4(lightColor, 1.0);
         }
         
-        gl_FragColor = vec4(finalColor, 1.0);
+        gl_FragColor = finalOutput;
       }
     `
 
@@ -96,32 +151,58 @@ export function ShaderAnimation() {
     const scene = new THREE.Scene()
     const geometry = new THREE.PlaneGeometry(2, 2)
 
-    // Initialize waves array with negative time (inactive)
+    // Initialize waves array
     const initialWaves = new Array(MAX_WAVES).fill(0).map(() => new THREE.Vector3(0, 0, -10.0));
 
+    // Load Texture if URL provided
+    let texture: THREE.Texture | null = null;
+    
     const uniforms = {
       time: { type: "f", value: 0.0 },
       resolution: { type: "v2", value: new THREE.Vector2() },
+      imageResolution: { type: "v2", value: new THREE.Vector2(1, 1) }, // Default 1:1
       uWaves: { value: initialWaves },
+      uTexture: { value: null },
+      uHasTexture: { value: false }
+    }
+
+    if (imageUrl) {
+        const loader = new THREE.TextureLoader();
+        loader.setCrossOrigin("anonymous");
+        
+        texture = loader.load(
+            imageUrl, 
+            (tex) => {
+                tex.minFilter = THREE.LinearFilter;
+                tex.magFilter = THREE.LinearFilter;
+                uniforms.uTexture.value = tex;
+                uniforms.uHasTexture.value = true;
+                // Store actual image dimensions
+                uniforms.imageResolution.value.x = tex.image.width;
+                uniforms.imageResolution.value.y = tex.image.height;
+            },
+            undefined, 
+            (err) => {
+                console.error("Error loading texture:", err);
+            }
+        );
     }
 
     const material = new THREE.ShaderMaterial({
       uniforms: uniforms,
       vertexShader: vertexShader,
       fragmentShader: fragmentShader,
-      transparent: true,
+      transparent: false,
       depthWrite: false,
-      blending: THREE.AdditiveBlending, // Makes overlapping waves brighter
     })
 
     const mesh = new THREE.Mesh(geometry, material)
     scene.add(mesh)
 
-    const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true })
+    const renderer = new THREE.WebGLRenderer({ antialias: true })
     const dpr = window.devicePixelRatio || 1;
     renderer.setPixelRatio(dpr)
     
-    // IMPORTANT: Set uniform resolution to physical pixels (width * dpr)
     const width = container.clientWidth;
     const height = container.clientHeight;
     renderer.setSize(width, height)
@@ -137,38 +218,24 @@ export function ShaderAnimation() {
         const rect = container.getBoundingClientRect();
         const dpr = window.devicePixelRatio || 1;
         
-        // Scale factor for CSS transforms (e.g. scale(1.1) in Hero)
         const scaleX = container.clientWidth / rect.width;
         const scaleY = container.clientHeight / rect.height;
 
-        // 1. Calculate relative position in CSS pixels
-        // 2. Scale by internal/visual ratio (to fix CSS transforms)
-        // 3. Multiply by DPR to match gl_FragCoord (Physical Pixels)
         const cssMouseX = (clientX - rect.left) * scaleX;
-        const cssMouseY = (rect.height - (clientY - rect.top)) * scaleY; // Flip Y for WebGL
+        const cssMouseY = (rect.height - (clientY - rect.top)) * scaleY;
 
         const physicalMouseX = cssMouseX * dpr;
         const physicalMouseY = cssMouseY * dpr;
         
-        // Update the current wave in the ring buffer
         const idx = sceneRef.current.currentWaveIndex;
         const waves = sceneRef.current.uniforms.uWaves.value;
         
         waves[idx].set(physicalMouseX, physicalMouseY, sceneRef.current.uniforms.time.value);
-        
-        // Advance index (Ring buffer)
         sceneRef.current.currentWaveIndex = (idx + 1) % MAX_WAVES;
     }
 
-    // Mouse Handler
-    const onClick = (e: MouseEvent) => {
-        handleInteraction(e.clientX, e.clientY);
-    }
-
-    // Touch Handler (Mobile)
+    const onClick = (e: MouseEvent) => handleInteraction(e.clientX, e.clientY);
     const onTouch = (e: TouchEvent) => {
-        // We do NOT prevent default here to allow scrolling.
-        // We just want to capture the position for the effect.
         if (e.touches.length > 0) {
             const touch = e.touches[0];
             handleInteraction(touch.clientX, touch.clientY);
@@ -177,25 +244,19 @@ export function ShaderAnimation() {
 
     window.addEventListener("click", onClick);
     window.addEventListener("touchstart", onTouch, { passive: true });
-    // REMOVED: window.addEventListener("touchmove", onTouch, { passive: true });
 
-    // Handle window resize
     const onWindowResize = () => {
       if (!container) return;
       const dpr = window.devicePixelRatio || 1;
       const width = container.clientWidth
       const height = container.clientHeight
-      
       renderer.setSize(width, height)
-      
-      // Update uniforms with physical pixel size
       uniforms.resolution.value.x = width * dpr
       uniforms.resolution.value.y = height * dpr
     }
 
     window.addEventListener("resize", onWindowResize, false)
 
-    // Animation loop
     const animate = () => {
       const animationId = requestAnimationFrame(animate)
       uniforms.time.value += 0.015
@@ -206,59 +267,45 @@ export function ShaderAnimation() {
       }
     }
 
-    // Store scene references for cleanup
     sceneRef.current = {
-      camera,
-      scene,
-      renderer,
-      uniforms,
-      animationId: 0,
-      currentWaveIndex: 0
+      camera, scene, renderer, uniforms, animationId: 0, currentWaveIndex: 0
     }
 
-    // Start animation
     animate()
 
-    // --- INITIAL AUTO-TRIGGER ---
-    // Trigger one wave at the center after a short delay to ensure everything is rendered
     setTimeout(() => {
         if (container) {
             const rect = container.getBoundingClientRect();
-            const centerX = rect.left + rect.width / 2;
-            const centerY = rect.top + rect.height / 2;
-            handleInteraction(centerX, centerY);
+            handleInteraction(rect.left + rect.width / 2, rect.top + rect.height / 2);
         }
     }, 500);
 
-    // Cleanup function
     return () => {
       window.removeEventListener("resize", onWindowResize)
       window.removeEventListener("click", onClick)
       window.removeEventListener("touchstart", onTouch)
-      // REMOVED: window.removeEventListener("touchmove", onTouch)
 
       if (sceneRef.current) {
         cancelAnimationFrame(sceneRef.current.animationId)
-
         if (container && sceneRef.current.renderer.domElement) {
             if(container.contains(sceneRef.current.renderer.domElement)) {
                 container.removeChild(sceneRef.current.renderer.domElement)
             }
         }
-
         sceneRef.current.renderer.dispose()
         geometry.dispose()
         material.dispose()
+        if (texture) texture.dispose();
       }
     }
-  }, [])
+  }, [imageUrl])
 
   return (
     <div
       ref={containerRef}
       className="w-full h-full"
       style={{
-        background: "transparent", 
+        background: "#020617", 
         overflow: "hidden",
       }}
     />
