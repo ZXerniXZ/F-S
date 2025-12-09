@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { ChevronDown } from 'lucide-react';
 import { Language } from '../types';
+import { ShaderAnimation } from './ui/ShaderAnimation';
 
 interface HeroProps {
   lang: Language;
@@ -43,18 +44,17 @@ const Hero: React.FC<HeroProps> = ({ lang }) => {
 
   return (
     <section id="hero" className="relative h-screen w-full flex items-center justify-center overflow-hidden bg-slate-950">
-      {/* Parallax Background */}
+      {/* Parallax Background with Shader */}
       <div 
         className="absolute inset-0 z-0 scale-110 transition-transform duration-100 ease-out"
         style={{
             transform: `translate3d(${-offset.x}px, ${-offset.y}px, 0) scale(1.1)`
         }}
       >
-        <img 
-          src="https://images.unsplash.com/photo-1570158268183-d296b2892211?q=80&w=2546&auto=format&fit=crop" 
-          alt="Atmospheric Event" 
-          className="w-full h-full object-cover opacity-30 animate-[pulse_10s_ease-in-out_infinite]"
-        />
+        <div className="w-full h-full opacity-60">
+            <ShaderAnimation />
+        </div>
+        {/* Gradient Overlay for text readability */}
         <div className="absolute inset-0 bg-gradient-to-b from-slate-950/80 via-slate-950/40 to-slate-950" />
       </div>
 
