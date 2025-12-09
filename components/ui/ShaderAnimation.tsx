@@ -152,11 +152,24 @@ export function ShaderAnimation() {
         sceneRef.current.currentWaveIndex = (idx + 1) % MAX_WAVES;
     }
 
+    // Mouse Handler
     const onClick = (e: MouseEvent) => {
         handleInteraction(e.clientX, e.clientY);
     }
 
+    // Touch Handler (Mobile)
+    const onTouch = (e: TouchEvent) => {
+        // We do NOT prevent default here to allow scrolling.
+        // We just want to capture the position for the effect.
+        if (e.touches.length > 0) {
+            const touch = e.touches[0];
+            handleInteraction(touch.clientX, touch.clientY);
+        }
+    }
+
     window.addEventListener("click", onClick);
+    window.addEventListener("touchstart", onTouch, { passive: true }); // Passive helps with scroll performance
+    window.addEventListener("touchmove", onTouch, { passive: true });
 
     // Handle window resize
     const onWindowResize = () => {
@@ -194,10 +207,23 @@ export function ShaderAnimation() {
     // Start animation
     animate()
 
+    // --- INITIAL AUTO-TRIGGER ---
+    // Trigger one wave at the center after a short delay to ensure everything is rendered
+    setTimeout(() => {
+        if (container) {
+            const rect = container.getBoundingClientRect();
+            const centerX = rect.left + rect.width / 2;
+            const centerY = rect.top + rect.height / 2;
+            handleInteraction(centerX, centerY);
+        }
+    }, 500);
+
     // Cleanup function
     return () => {
       window.removeEventListener("resize", onWindowResize)
       window.removeEventListener("click", onClick)
+      window.removeEventListener("touchstart", onTouch)
+      window.removeEventListener("touchmove", onTouch)
 
       if (sceneRef.current) {
         cancelAnimationFrame(sceneRef.current.animationId)
