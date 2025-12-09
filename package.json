@@ -17,7 +17,9 @@
     "three": "0.160.0",
     "framer-motion": "^12.23.25",
     "clsx": "2.1.1",
-    "tailwind-merge": "2.3.0"
+    "tailwind-merge": "2.3.0",
+    "class-variance-authority": "0.7.0",
+    "@radix-ui/react-slot": "1.0.2"
   },
   "devDependencies": {
     "@types/node": "^22.14.0",
