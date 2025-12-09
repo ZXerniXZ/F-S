@@ -305,7 +305,7 @@ const Pricing: React.FC<PricingProps> = ({ lang }) => {
       <div className="max-w-7xl mx-auto px-4 md:px-6">
         
         {/* HEADER */}
-        <div className="text-center mb-10 md:mb-16">
+        <div className="text-center mb-8 md:mb-16">
           <span className="text-indigo-600 dark:text-indigo-400/80 font-semibold tracking-[0.2em] uppercase text-[10px] md:text-xs">{t.sectionBadge}</span>
           <h2 className="text-3xl md:text-5xl text-slate-900 dark:text-white mt-3 font-serif leading-tight">{t.title}</h2>
           <p className="text-slate-600 dark:text-slate-400 mt-3 font-light text-sm md:text-base max-w-xl mx-auto hidden md:block">
@@ -317,13 +317,13 @@ const Pricing: React.FC<PricingProps> = ({ lang }) => {
             <div className="p-1 bg-slate-200 dark:bg-slate-800 rounded-full flex gap-1">
                 <button 
                   onClick={() => setActiveTab('packages')}
-                  className={`px-6 py-2 rounded-full text-xs font-bold uppercase tracking-widest transition-all duration-300 flex items-center gap-2 ${activeTab === 'packages' ? 'bg-white dark:bg-slate-950 text-indigo-600 dark:text-white shadow-sm' : 'text-slate-500 hover:text-slate-800 dark:hover:text-slate-300'}`}
+                  className={`px-4 md:px-6 py-2 rounded-full text-xs font-bold uppercase tracking-widest transition-all duration-300 flex items-center gap-2 ${activeTab === 'packages' ? 'bg-white dark:bg-slate-950 text-indigo-600 dark:text-white shadow-sm' : 'text-slate-500 hover:text-slate-800 dark:hover:text-slate-300'}`}
                 >
                   <Sparkles className="w-3 h-3" /> {t.tabPackages}
                 </button>
                 <button 
                   onClick={() => setActiveTab('custom')}
-                  className={`px-6 py-2 rounded-full text-xs font-bold uppercase tracking-widest transition-all duration-300 flex items-center gap-2 ${activeTab === 'custom' ? 'bg-white dark:bg-slate-950 text-indigo-600 dark:text-white shadow-sm' : 'text-slate-500 hover:text-slate-800 dark:hover:text-slate-300'}`}
+                  className={`px-4 md:px-6 py-2 rounded-full text-xs font-bold uppercase tracking-widest transition-all duration-300 flex items-center gap-2 ${activeTab === 'custom' ? 'bg-white dark:bg-slate-950 text-indigo-600 dark:text-white shadow-sm' : 'text-slate-500 hover:text-slate-800 dark:hover:text-slate-300'}`}
                 >
                   <SlidersHorizontal className="w-3 h-3" /> {t.tabCustom}
                 </button>
@@ -348,10 +348,10 @@ const Pricing: React.FC<PricingProps> = ({ lang }) => {
             <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 md:gap-12 items-start">
               
               {/* LEFT COL: CONFIGURATION */}
-              <div className="lg:col-span-8 space-y-8">
+              <div className="lg:col-span-8 space-y-6 md:space-y-8">
                 
                 {/* 1. DATE & LOCATION */}
-                <div className="bg-white dark:bg-slate-900/40 p-6 md:p-8 rounded-xl border border-slate-200 dark:border-slate-800/60 shadow-sm relative group hover:border-indigo-500/20 transition-all">
+                <div className="bg-white dark:bg-slate-900/40 p-5 md:p-8 rounded-xl border border-slate-200 dark:border-slate-800/60 shadow-sm relative group hover:border-indigo-500/20 transition-all">
                     <div className="flex items-center gap-3 mb-6">
                         <div className="p-2 bg-indigo-50 dark:bg-indigo-500/10 rounded-lg text-indigo-600 dark:text-indigo-400">
                             <CalendarIcon className="w-5 h-5" />
@@ -417,7 +417,7 @@ const Pricing: React.FC<PricingProps> = ({ lang }) => {
 
                 {/* 2. DURATION & QUANTITY */}
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6 md:gap-8">
-                    <div className="bg-white dark:bg-slate-900/40 p-6 rounded-xl border border-slate-200 dark:border-slate-800/60 shadow-sm relative hover:border-indigo-500/20 transition-all">
+                    <div className="bg-white dark:bg-slate-900/40 p-5 md:p-6 rounded-xl border border-slate-200 dark:border-slate-800/60 shadow-sm relative hover:border-indigo-500/20 transition-all">
                         <div className="flex items-center gap-3 mb-6">
                             <div className="p-2 bg-indigo-50 dark:bg-indigo-500/10 rounded-lg text-indigo-600 dark:text-indigo-400">
                                 <Clock className="w-5 h-5" />
@@ -436,12 +436,12 @@ const Pricing: React.FC<PricingProps> = ({ lang }) => {
                             onChange={(e) => setHours(parseInt(e.target.value))}
                             className="w-full h-1.5 md:h-2 bg-slate-200 dark:bg-slate-800 rounded-lg appearance-none cursor-pointer accent-indigo-600 dark:accent-indigo-500"
                         />
-                        <div className="mt-4 flex items-center gap-2 text-xs text-emerald-600 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-900/20 p-2 rounded border border-emerald-100 dark:border-emerald-900/30">
+                        <div className="mt-4 flex items-center gap-2 text-[10px] md:text-xs text-emerald-600 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-900/20 p-2 rounded border border-emerald-100 dark:border-emerald-900/30">
                             <Check className="w-3 h-3" /> {t.teamIncluded}
                         </div>
                     </div>
 
-                    <div className="bg-white dark:bg-slate-900/40 p-6 rounded-xl border border-slate-200 dark:border-slate-800/60 shadow-sm relative hover:border-indigo-500/20 transition-all">
+                    <div className="bg-white dark:bg-slate-900/40 p-5 md:p-6 rounded-xl border border-slate-200 dark:border-slate-800/60 shadow-sm relative hover:border-indigo-500/20 transition-all">
                         <div className="flex items-center gap-3 mb-6">
                             <div className="p-2 bg-indigo-50 dark:bg-indigo-500/10 rounded-lg text-indigo-600 dark:text-indigo-400">
                                 <Layout className="w-5 h-5" />
@@ -468,7 +468,7 @@ const Pricing: React.FC<PricingProps> = ({ lang }) => {
                 </div>
 
                 {/* 3. WEB ALBUM */}
-                <div className="bg-white dark:bg-slate-900/40 p-6 md:p-8 rounded-xl border border-slate-200 dark:border-slate-800/60 shadow-sm relative hover:border-indigo-500/20 transition-all">
+                <div className="bg-white dark:bg-slate-900/40 p-5 md:p-8 rounded-xl border border-slate-200 dark:border-slate-800/60 shadow-sm relative hover:border-indigo-500/20 transition-all">
                     <div className="flex items-center gap-3 mb-6">
                         <div className="p-2 bg-indigo-50 dark:bg-indigo-500/10 rounded-lg text-indigo-600 dark:text-indigo-400">
                             <Globe className="w-5 h-5" />
@@ -477,11 +477,11 @@ const Pricing: React.FC<PricingProps> = ({ lang }) => {
                         <Tooltip text={t.infoAlbum} active={activeTooltip === 'album'} toggle={() => toggleTooltip('album')} />
                     </div>
 
-                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                    <div className="flex md:grid md:grid-cols-3 gap-4 overflow-x-auto md:overflow-visible pb-4 md:pb-0 snap-x snap-mandatory md:snap-none -mx-5 px-5 md:mx-0 md:px-0 scrollbar-hide">
                         {/* Basic */}
                         <div 
                             onClick={() => setAlbumType('basic')}
-                            className={`cursor-pointer p-4 rounded-lg border-2 transition-all duration-300 flex flex-col justify-between h-full relative overflow-hidden
+                            className={`min-w-[80vw] md:min-w-0 snap-center cursor-pointer p-4 rounded-lg border-2 transition-all duration-300 flex flex-col justify-between h-auto md:h-full relative overflow-hidden
                                 ${albumType === 'basic' 
                                     ? 'bg-white dark:bg-slate-800 border-indigo-500 shadow-lg scale-[1.02]' 
                                     : 'bg-slate-50 dark:bg-slate-950/50 border-transparent hover:border-slate-300 dark:hover:border-slate-700 opacity-70 hover:opacity-100'
@@ -501,7 +501,7 @@ const Pricing: React.FC<PricingProps> = ({ lang }) => {
                         {/* Private */}
                         <div 
                             onClick={() => setAlbumType('private')}
-                            className={`cursor-pointer p-4 rounded-lg border-2 transition-all duration-300 flex flex-col justify-between h-full relative overflow-hidden
+                            className={`min-w-[80vw] md:min-w-0 snap-center cursor-pointer p-4 rounded-lg border-2 transition-all duration-300 flex flex-col justify-between h-auto md:h-full relative overflow-hidden
                                 ${albumType === 'private' 
                                     ? 'bg-white dark:bg-slate-800 border-indigo-500 shadow-lg scale-[1.02]' 
                                     : 'bg-slate-50 dark:bg-slate-950/50 border-transparent hover:border-slate-300 dark:hover:border-slate-700 opacity-70 hover:opacity-100'
@@ -524,7 +524,7 @@ const Pricing: React.FC<PricingProps> = ({ lang }) => {
                         {/* Premium */}
                         <div 
                             onClick={() => setAlbumType('premium')}
-                            className={`cursor-pointer p-4 rounded-lg border-2 transition-all duration-300 flex flex-col justify-between h-full relative overflow-hidden
+                            className={`min-w-[80vw] md:min-w-0 snap-center cursor-pointer p-4 rounded-lg border-2 transition-all duration-300 flex flex-col justify-between h-auto md:h-full relative overflow-hidden
                                 ${albumType === 'premium' 
                                     ? 'bg-indigo-50 dark:bg-indigo-900/20 border-indigo-500 shadow-lg scale-[1.02]' 
                                     : 'bg-slate-50 dark:bg-slate-950/50 border-transparent hover:border-slate-300 dark:hover:border-slate-700 opacity-70 hover:opacity-100'

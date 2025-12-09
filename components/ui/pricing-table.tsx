@@ -66,14 +66,15 @@ export function PricingTable({
         className={cn("w-full max-w-4xl mx-auto px-4", containerClassName)}
         {...props}
       >
-        <div className="flex flex-col sm:flex-row gap-4 mb-12">
+        {/* PLAN CARDS SELECTOR */}
+        <div className="flex flex-col sm:flex-row gap-4 mb-8 md:mb-12">
           {plans.map((plan) => (
             <button
               key={plan.name}
               type="button"
               onClick={() => handlePlanSelect(plan.level)}
               className={cn(
-                "flex-1 p-6 rounded-2xl text-left transition-all duration-300 relative group",
+                "flex-1 p-5 md:p-6 rounded-2xl text-left transition-all duration-300 relative group",
                 "border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900/40 backdrop-blur-sm",
                 selectedPlan === plan.level 
                   ? "ring-2 ring-indigo-500 dark:ring-indigo-400 shadow-xl scale-[1.02] z-10" 
@@ -88,12 +89,12 @@ export function PricingTable({
                   </span>
                 )}
               </div>
-              <p className="text-xs text-slate-500 dark:text-slate-400 mb-4 h-8 leading-tight">{plan.description}</p>
+              <p className="text-xs text-slate-500 dark:text-slate-400 mb-4 h-auto md:h-8 leading-tight">{plan.description}</p>
               <div className="flex items-baseline gap-1">
-                <span className="text-3xl font-bold font-serif">
+                <span className="text-2xl md:text-3xl font-bold font-serif">
                    €{plan.price.monthly}
                 </span>
-                <span className="text-xs font-normal text-slate-400 uppercase tracking-widest">
+                <span className="text-[10px] md:text-xs font-normal text-slate-400 uppercase tracking-widest">
                   / Evento
                 </span>
               </div>
@@ -101,7 +102,8 @@ export function PricingTable({
           ))}
         </div>
 
-        <div className="border border-slate-200 dark:border-slate-800 rounded-2xl overflow-hidden bg-white dark:bg-slate-900/20 shadow-sm">
+        {/* DESKTOP VIEW: COMPARISON TABLE */}
+        <div className="hidden md:block border border-slate-200 dark:border-slate-800 rounded-2xl overflow-hidden bg-white dark:bg-slate-900/20 shadow-sm">
           <div className="overflow-x-auto">
             <div className="min-w-[640px] divide-y divide-slate-100 dark:divide-slate-800">
               <div className="flex items-center p-5 bg-slate-50 dark:bg-slate-800/50">
@@ -158,7 +160,42 @@ export function PricingTable({
           </div>
         </div>
 
-        <div className="mt-12 text-center">
+        {/* MOBILE VIEW: SELECTED PLAN FEATURES LIST */}
+        <div className="md:hidden bg-white dark:bg-slate-900/40 p-6 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm">
+            <h3 className="text-xs font-bold uppercase tracking-widest text-slate-500 mb-6 flex items-center gap-2">
+                <div className="w-1 h-4 bg-indigo-500 rounded-full"></div>
+                Dettagli {plans.find(p => p.level === selectedPlan)?.name}
+            </h3>
+            <div className="space-y-4">
+                {features.map((feature) => {
+                    const plan = plans.find(p => p.level === selectedPlan);
+                    if (!plan) return null;
+
+                    const hasValue = feature.values && feature.values[plan.level];
+                    const isIncluded = shouldShowCheck(feature.included, plan.level);
+                    const showFeature = hasValue || isIncluded;
+
+                    return (
+                        <div key={feature.name} className={cn("flex justify-between items-start gap-4", !showFeature && "opacity-40 grayscale")}>
+                            <span className="text-sm font-medium text-slate-700 dark:text-slate-300 flex-1">{feature.name}</span>
+                            <div className="shrink-0">
+                                {hasValue ? (
+                                    <span className="text-xs font-bold text-indigo-600 dark:text-indigo-300 bg-indigo-50 dark:bg-indigo-900/30 px-2 py-1 rounded">
+                                        {feature.values![plan.level]}
+                                    </span>
+                                ) : isIncluded ? (
+                                     <Check className="w-5 h-5 text-indigo-500" />
+                                ) : (
+                                    <Minus className="w-4 h-4 text-slate-300" />
+                                )}
+                            </div>
+                        </div>
+                    );
+                })}
+            </div>
+        </div>
+
+        <div className="mt-8 md:mt-12 text-center">
           <Button
             onClick={() => document.getElementById('contact')?.scrollIntoView({ behavior: 'smooth' })}
             className={cn(
